@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232.181 46.23" role="img" aria-labelledby="title">
+  <title id="title">Pioneer Centre for Artificial Intelligence</title>
+  <g fill="currentColor">
+    <path d="m36.5 22.978 1.242 2.547 4.92 1.074-.008-7.247-3.943-.938Z"/>
+    <path d="M4.7 7.223 0 8.284V1.318L3.733.482l3 2.345Z"/>
+    <path d="m42.642 37.711-7.568 1.848 2.412 4.8 5.177 1.071Z"/>
+    <path d="m23.86 37.037.011 5.586-4.356 3.484-.035-8.064Z"/>
+    <path d="M16.308 2.369 23.845.535l.012 7.695Z"/>
+    <path d="M6 22.424a4.885 4.885 0 0 1-.487 2.154A4.921 4.921 0 0 1 0 27.245v-9.6s4.223 3.334 6 4.779Z"/>
+    <path d="m19.611 18.074 4.238.95.008 7.78a4.973 4.973 0 0 1-4.246-8.73Z"/>
+  </g>
+  <path fill="currentColor" d="M57.14 0h1v46.23h-1z"/>
+  <g fill="currentColor" font-family="Arial, Helvetica, sans-serif" font-size="9.6" font-weight="700" letter-spacing=".25">
+    <text x="72.5" y="17.9">PIONEER CENTRE FOR</text>
+    <text x="72.5" y="36.2">ARTIFICIAL INTELLIGENCE</text>
+  </g>
+</svg>
