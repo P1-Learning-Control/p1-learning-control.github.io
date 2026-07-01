@@ -1,40 +1,194 @@
+/* Workshop 1 navigation bar */
+
 .workshop-subnav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  max-width: 1120px;
-  margin: 1rem auto 1.5rem;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: var(--shadow-card);
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .workshop-subnav a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0.65rem 1.05rem;
+  min-height: 52px;
+  padding: 0 1.35rem;
   color: var(--ink);
   font-weight: 800;
   text-decoration: none;
-  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, border-color 160ms ease;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
 .workshop-subnav a:hover {
-  transform: translateY(-1px);
-  border-color: rgba(29, 78, 216, 0.28);
+  color: var(--control-blue);
+  background: rgba(29, 78, 216, 0.06);
   text-decoration: none;
 }
 
 .workshop-subnav a[aria-current="page"] {
-  color: #ffffff;
-  background: linear-gradient(135deg, var(--control-blue), var(--signal-cyan));
-  border-color: rgba(255, 255, 255, 0.28);
+  color: var(--control-blue);
+  border-bottom-color: var(--control-blue);
+  background: rgba(29, 78, 216, 0.08);
 }
+
+/* Workshop 1 home page */
+
+.workshop-home {
+  max-width: none;
+  padding: 0 0 3rem;
+}
+
+.loc-hero {
+  position: relative;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #ffffff;
+  overflow: hidden;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.24), rgba(15, 23, 42, 0.32)),
+    url("../assets/CopenhagenBack.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.loc-hero-content {
+  position: relative;
+  z-index: 3;
+  padding: 2rem;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+}
+
+.loc-hero h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 0.95;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.loc-subtitle {
+  margin: 1.2rem 0 0;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.loc-date-line {
+  margin: 0.45rem 0 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* iLQR pendulum */
+
+.workshop-hero-plot {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(0.5rem, 2.5vw, 1.2rem);
+  transform: translateX(-50%);
+  z-index: 2;
+  width: clamp(260px, 42vw, 560px);
+  height: clamp(95px, 12vw, 150px);
+  border-radius: 18px;
+  cursor: pointer;
+  opacity: 0.68;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.22));
+  touch-action: none;
+  pointer-events: auto;
+}
+
+.loc-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+  gap: 3rem;
+  max-width: 1040px;
+  margin: 3.5rem auto 1.5rem;
+  padding: 0 1.5rem;
+  align-items: start;
+}
+
+.loc-home-content {
+  color: var(--ink);
+  font-size: 1.18rem;
+  line-height: 1.7;
+}
+
+.loc-home-content p {
+  margin: 0 0 1.5rem;
+}
+
+/* Workshop information list */
+
+.loc-details {
+  background: transparent;
+}
+
+.loc-details h2 {
+  margin: 0 0 1rem;
+  color: var(--ink);
+}
+
+.loc-details .plain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loc-details .plain-list li {
+  position: relative;
+  display: block;
+  padding: 0.85rem 0;
+  padding-left: 0 !important;
+  border-bottom: 1px solid var(--line);
+}
+
+.loc-details .plain-list li::before {
+  content: none !important;
+  display: none !important;
+}
+
+.loc-details .plain-list li:last-child {
+  border-bottom: 0;
+}
+
+.loc-details .plain-list strong {
+  font-weight: 800;
+}
+
+.loc-note-section {
+  max-width: 1040px;
+  margin: 1rem auto 0;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.loc-workshop-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Program page */
 
 .program-table-wrap {
   width: 100%;
@@ -207,11 +361,30 @@
   color: var(--muted);
 }
 
+/* Accessibility helper */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Responsive styles */
 
 @media (max-width: 900px) {
   .hotel-grid {
     grid-template-columns: 1fr;
+  }
+
+  .loc-home-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 }
 
@@ -226,15 +399,38 @@
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .workshop-subnav {
-    border-radius: 20px;
+    justify-content: flex-start;
   }
 
   .workshop-subnav a {
-    width: 100%;
+    min-height: 48px;
+    padding: 0 1rem;
+    font-size: 0.95rem;
   }
 
+  .loc-hero {
+    min-height: 380px;
+  }
+
+  .workshop-hero-plot {
+    width: 240px;
+    height: 82px;
+    bottom: 0.45rem;
+    opacity: 0.60;
+  }
+
+  .loc-home-content {
+    font-size: 1.05rem;
+  }
+
+  .loc-date-line {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 560px) {
   .program-table {
     min-width: 620px;
   }

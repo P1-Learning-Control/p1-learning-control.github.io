@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Workshop 1 | Learning and Optimal Control in Dynamical Systems</title>
+    <title>LOC 2026 | Learning and Optimal Control Workshop</title>
     <link rel="stylesheet" href="../assets/styles.css">
     <link rel="stylesheet" href="../assets/workshop-tabs.css">
   </head>
@@ -26,49 +26,54 @@
       <a href="workshop-1-venue-travel.html">Venue &amp; Travel</a>
     </nav>
 
-    <main>
-      <section class="hero">
-        <div class="hero-content">
-          <p class="eyebrow">Workshop 1</p>
-          <h1>Workshop 1</h1>
+    <main class="workshop-home">
+      <section class="loc-hero" aria-labelledby="loc-title">
+        <div class="loc-hero-content">
+          <h1 id="loc-title">LOC 2026</h1>
+          <p class="loc-subtitle">Learning and Optimal Control Workshop</p>
+          <p class="loc-date-line">September 10th, Copenhagen, Denmark.</p>
         </div>
+
+        <canvas
+          id="workshopPendulumCanvas"
+          class="workshop-hero-plot"
+          aria-hidden="true"
+        ></canvas>
       </section>
 
-      <section class="section two-column" aria-labelledby="workshop-overview">
-        <div>
-          <h2 id="workshop-overview">About the workshop</h2>
+      <section class="loc-home-grid" aria-labelledby="about-loc">
+        <div class="loc-home-content">
+          <h2 id="about-loc" class="visually-hidden">About LOC 2026</h2>
+
           <p>
-            The first workshop of the P1 program <strong>Learning and Optimal Control in Dynamical Systems</strong>
-            will bring together researchers working at the intersection of learning, optimization, reinforcement
-            learning, control, and dynamical systems.
+            The Learning and Optimal Control Workshop 2026 aims to bring together
+            researchers working on optimal control and learning in dynamical systems
+            from different disciplines and backgrounds, including control theory,
+            statistical learning, online optimization and reinforcement learning, and
+            formal models of learning and action.
           </p>
+
           <p>
-            The goal of the workshop is to create a focused setting for scientific exchange, open discussion,
-            and collaboration across institutions and research communities.
+            The workshop aims to create a focused setting for scientific exchange, open
+            discussion, and collaboration across institutions and research communities.
           </p>
         </div>
 
-        <aside aria-labelledby="workshop-details">
-          <h2 id="workshop-details">Details</h2>
+        <aside class="loc-details" aria-labelledby="workshop-details">
+          <h2 id="workshop-details">Workshop information</h2>
+
           <ul class="plain-list">
-            <li><strong>Date:</strong> 10th September 2026</li>
-            <li><strong>Time:</strong> 9:00-17:00</li>
+            <li><strong>Date:</strong> September 10th</li>
+            <li><strong>Time:</strong> TBD</li>
             <li><strong>Location:</strong> Copenhagen, Denmark</li>
             <li><strong>Format:</strong> In person</li>
-            <li><strong>Registration:</strong> The Registration is not open yet.</li>
+            <li><strong>Registration:</strong> TBD</li>
           </ul>
         </aside>
       </section>
 
-      <section class="section" aria-labelledby="topics">
-        <h2 id="topics">Topics</h2>
-        <ul class="plain-list">
-          <li>Learning-based control and decision-making</li>
-          <li>Optimal control and optimization for dynamical systems</li>
-          <li>Reinforcement learning and adaptive control</li>
-          <li>Safety, robustness, and guarantees in learning-enabled systems</li>
-          <li>Applications in robotics, energy systems, transportation, and related domains</li>
-        </ul>
+      <section class="loc-note-section" aria-label="Workshop note">
+        <p class="loc-workshop-note">LOC 2026 is a P1 workshop.</p>
       </section>
     </main>
 
@@ -80,5 +85,7 @@
       >
       <p>Learning and Optimal Control in Dynamical Systems. P1 program.</p>
     </footer>
+
+    <script src="../assets/workshop-pendulum.js"></script>
   </body>
 </html>
