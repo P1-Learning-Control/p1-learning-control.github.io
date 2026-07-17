@@ -2,7 +2,10 @@
   const canvas = document.getElementById("workshopPendulumCanvas");
   if (!canvas) return;
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
   if (prefersReducedMotion) return;
 
   const ctx = canvas.getContext("2d");
@@ -11,56 +14,106 @@
   let height = 0;
   let dpr = 1;
   let lastTime = null;
+  let frameNumber = 0;
 
-  const trackLimit = 28.0;
-  const desiredBoatPosition = 0.0;
+  const stateDimension = 6;
 
-  let boatPosition = randomBetween(-trackLimit * 0.35, trackLimit * 0.35);
-  let boatVelocity = 0.0;
-  let theta = Math.PI - 0.18;
-  let thetaVelocity = 0.0;
+  /*
+   * The track limit has been doubled from 6 to 12.
+   * The physical boat range is now [-12, 12].
+   */
+  const trackLimit = 12;
+  const desiredBoatPosition = 0;
+
+  /*
+   * State:
+   * [x, xDot, theta1, thetaDot1, theta2, thetaDot2]
+   *
+   * Both angles are absolute angles measured from the upward vertical.
+   */
+  let boatPosition = randomBetween(
+    -trackLimit * 0.15,
+    trackLimit * 0.15
+  );
+
+  let boatVelocity = 0;
+
+  let theta1 = Math.PI - 0.16;
+  let thetaVelocity1 = 0;
+
+  let theta2 = Math.PI + 0.13;
+  let thetaVelocity2 = 0;
 
   const gravity = 9.81;
-  const cartMass = 1.0;
-  const poleMass = 0.18;
-  const poleLength = 0.9;
-  const totalMass = cartMass + poleMass;
-  const poleMassLength = poleMass * poleLength;
 
-  const maxControlForce = 170;
-  const maxTotalForce = 300;
+  const boatMass = 1.25;
+  const firstMass = 0.19;
+  const secondMass = 0.14;
 
-  const horizonSteps = 32;
-  const planningDt = 0.035;
-  const ilqrIterations = 5;
+  const firstLength = 0.72;
+  const secondLength = 0.62;
 
-  const stageWeights = {
-    cart: 0.025,
-    cartVelocity: 0.035,
-    angle: 18.0,
-    angularVelocity: 1.1,
-    control: 0.0007,
-    barrier: 0.02
-  };
+  /*
+   * Passive friction and water resistance.
+   * These are not controlled torques.
+   */
+  const linearDrag = 0.23;
+  const firstPivotDamping = 0.026;
+  const secondPivotDamping = 0.022;
+  const jointDamping = 0.012;
 
-  const terminalWeights = {
-    cart: 0.08,
-    cartVelocity: 0.08,
-    angle: 84.0,
-    angularVelocity: 7.0,
-    barrier: 0.08
-  };
+  /*
+   * The only controller input is a horizontal force on the boat.
+   */
+  const maxControlForce = 82;
+  const maxTotalForce = 125;
+
+  let appliedControlForce = 0;
+  let lastRequestedControl = 0;
+
+  const horizonSteps = 27;
+  const planningDt = 0.032;
+  const ilqrIterations = 4;
+
+  /*
+   * Cost order:
+   * [x, xDot, theta1, thetaDot1, theta2, thetaDot2]
+   */
+  const stageWeights = [
+    0.1,
+    0.09,
+    13.5,
+    0.82,
+    10.5,
+    0.66
+  ];
+
+  const terminalWeights = [
+    0.75,
+    0.3,
+    62,
+    5,
+    48,
+    4.1
+  ];
+
+  const controlWeight = 0.0021;
 
   let controlPlan = null;
 
   let disturbanceForce = 0;
-  let disturbanceDirection = 1;
+  let disturbancePeakForce = 0;
+  let disturbanceSourceSide = 1;
+  let disturbanceElapsed = 0;
   let disturbanceTimeLeft = 0;
   let disturbanceDuration = 0;
   let disturbanceFlash = 0;
 
   const bobTrail = [];
-  const maxTrailLength = 90;
+  const maxTrailLength = 95;
+
+  canvas.style.cursor = "pointer";
+  canvas.title = "Click on either side to push the boat from that side";
 
   canvas.addEventListener("pointerdown", applyDisturbance);
   window.addEventListener("resize", resizeCanvas);
@@ -68,12 +121,12 @@
   resizeCanvas();
   requestAnimationFrame(animate);
 
-  function randomBetween(min, max) {
-    return min + Math.random() * (max - min);
+  function randomBetween(minimum, maximum) {
+    return minimum + Math.random() * (maximum - minimum);
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
+  function clamp(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(maximum, value));
   }
 
   function wrapAngle(angle) {
@@ -90,40 +143,6 @@
     return wrapped;
   }
 
-  function angleDifference(a, b) {
-    return wrapAngle(a - b);
-  }
-
-  function stateDifference(a, b) {
-    return [
-      a[0] - b[0],
-      a[1] - b[1],
-      angleDifference(a[2], b[2]),
-      a[3] - b[3]
-    ];
-  }
-
-  function dot(a, b) {
-    let value = 0;
-
-    for (let i = 0; i < a.length; i += 1) {
-      value += a[i] * b[i];
-    }
-
-    return value;
-  }
-
-  function addToState(state, index, amount) {
-    const copy = state.slice();
-    copy[index] += amount;
-
-    if (index === 2) {
-      copy[index] = wrapAngle(copy[index]);
-    }
-
-    return copy;
-  }
-
   function resizeCanvas() {
     const rect = canvas.getBoundingClientRect();
 
@@ -137,20 +156,51 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
+  function currentState() {
+    return [
+      boatPosition,
+      boatVelocity,
+      wrapAngle(theta1),
+      thetaVelocity1,
+      wrapAngle(theta2),
+      thetaVelocity2
+    ];
+  }
+
+  function setCurrentState(state) {
+    boatPosition = state[0];
+    boatVelocity = state[1];
+
+    theta1 = wrapAngle(state[2]);
+    thetaVelocity1 = state[3];
+
+    theta2 = wrapAngle(state[4]);
+    thetaVelocity2 = state[5];
+  }
+
   function applyDisturbance(event) {
     const rect = canvas.getBoundingClientRect();
     const clickX = event.clientX - rect.left;
     const boatScreenX = modelXToScreenX(boatPosition);
 
-    disturbanceDirection = clickX >= boatScreenX ? 1 : -1;
+    /*
+     * +1 means the disturbance originates from the right.
+     * -1 means it originates from the left.
+     */
+    disturbanceSourceSide = clickX >= boatScreenX ? 1 : -1;
 
     /*
-      Disturbance is now a real temporary force on the boat/base.
-      It is not an instantaneous velocity kick, and it does not directly
-      modify the pendulum angle or angular velocity.
-    */
-    disturbanceForce = disturbanceDirection * randomBetween(85, 145);
-    disturbanceDuration = randomBetween(0.25, 0.70);
+     * A disturbance from the right pushes left.
+     * A disturbance from the left pushes right.
+     */
+    const forceDirection = -disturbanceSourceSide;
+
+    disturbancePeakForce =
+      forceDirection * randomBetween(20, 32);
+
+    disturbanceForce = 0;
+    disturbanceDuration = randomBetween(0.17, 0.29);
+    disturbanceElapsed = 0;
     disturbanceTimeLeft = disturbanceDuration;
     disturbanceFlash = 1;
 
@@ -159,153 +209,402 @@
     event.preventDefault();
   }
 
-  function currentState() {
+  function solveThreeByThree(matrix, vector) {
+    const augmented = matrix.map((row, index) => [
+      row[0],
+      row[1],
+      row[2],
+      vector[index]
+    ]);
+
+    for (let column = 0; column < 3; column += 1) {
+      let pivotRow = column;
+
+      for (let row = column + 1; row < 3; row += 1) {
+        if (
+          Math.abs(augmented[row][column]) >
+          Math.abs(augmented[pivotRow][column])
+        ) {
+          pivotRow = row;
+        }
+      }
+
+      if (pivotRow !== column) {
+        const temporaryRow = augmented[column];
+
+        augmented[column] = augmented[pivotRow];
+        augmented[pivotRow] = temporaryRow;
+      }
+
+      const pivot = augmented[column][column];
+
+      if (!Number.isFinite(pivot) || Math.abs(pivot) < 1e-9) {
+        return [0, 0, 0];
+      }
+
+      for (let item = column; item < 4; item += 1) {
+        augmented[column][item] /= pivot;
+      }
+
+      for (let row = 0; row < 3; row += 1) {
+        if (row === column) continue;
+
+        const factor = augmented[row][column];
+
+        for (let item = column; item < 4; item += 1) {
+          augmented[row][item] -=
+            factor * augmented[column][item];
+        }
+      }
+    }
+
     return [
-      boatPosition,
-      boatVelocity,
-      wrapAngle(theta),
-      thetaVelocity
+      augmented[0][3],
+      augmented[1][3],
+      augmented[2][3]
     ];
   }
 
-  function cartPoleNext(state, forceInput, dt, enforceRail) {
+  /*
+   * Nonlinear cart-double-pendulum dynamics.
+   *
+   * Generalized coordinates:
+   *
+   * q = [x, theta1, theta2]
+   *
+   * Controlled generalized force:
+   *
+   * Q = [F, 0, 0]
+   *
+   * Therefore, the controller acts only on the boat.
+   */
+  function doublePendulumNext(
+    state,
+    forceInput,
+    dt,
+    enforceRail
+  ) {
     let x = state[0];
     let xDot = state[1];
-    let angle = wrapAngle(state[2]);
-    let angleDot = state[3];
 
-    const force = clamp(forceInput, -maxTotalForce, maxTotalForce);
-    const sinTheta = Math.sin(angle);
-    const cosTheta = Math.cos(angle);
+    let angle1 = wrapAngle(state[2]);
+    let angleDot1 = state[3];
 
-    const temp =
-      (force + poleMassLength * angleDot * angleDot * sinTheta) /
-      totalMass;
+    let angle2 = wrapAngle(state[4]);
+    let angleDot2 = state[5];
 
-    const thetaAcceleration =
-      (gravity * sinTheta - cosTheta * temp) /
-      (poleLength * (4 / 3 - (poleMass * cosTheta * cosTheta) / totalMass));
+    const commandedForce = clamp(
+      forceInput,
+      -maxTotalForce,
+      maxTotalForce
+    );
 
-    const cartAcceleration =
-      temp - (poleMassLength * thetaAcceleration * cosTheta) / totalMass;
+    /*
+     * Passive water resistance on the boat.
+     */
+    const force =
+      commandedForce - linearDrag * xDot;
 
-    xDot += cartAcceleration * dt;
+    const combinedMass = firstMass + secondMass;
+    const angleDifference = angle1 - angle2;
+
+    const massMatrix = [
+      [
+        boatMass + firstMass + secondMass,
+        combinedMass * firstLength * Math.cos(angle1),
+        secondMass * secondLength * Math.cos(angle2)
+      ],
+      [
+        combinedMass * firstLength * Math.cos(angle1),
+        combinedMass * firstLength * firstLength,
+        secondMass *
+          firstLength *
+          secondLength *
+          Math.cos(angleDifference)
+      ],
+      [
+        secondMass * secondLength * Math.cos(angle2),
+        secondMass *
+          firstLength *
+          secondLength *
+          Math.cos(angleDifference),
+        secondMass * secondLength * secondLength
+      ]
+    ];
+
+    const relativeAngularVelocity =
+      angleDot2 - angleDot1;
+
+    const jointFriction =
+      jointDamping * relativeAngularVelocity;
+
+    /*
+     * The controlled force appears only in the first component.
+     * The angular components contain gravity, coupling, and
+     * passive damping only.
+     */
+    const generalizedForces = [
+      force +
+        combinedMass *
+          firstLength *
+          Math.sin(angle1) *
+          angleDot1 *
+          angleDot1 +
+        secondMass *
+          secondLength *
+          Math.sin(angle2) *
+          angleDot2 *
+          angleDot2,
+
+      -combinedMass *
+        gravity *
+        firstLength *
+        Math.sin(angle1) -
+        secondMass *
+          firstLength *
+          secondLength *
+          Math.sin(angleDifference) *
+          angleDot2 *
+          angleDot2 -
+        firstPivotDamping * angleDot1 +
+        jointFriction,
+
+      -secondMass *
+        gravity *
+        secondLength *
+        Math.sin(angle2) +
+        secondMass *
+          firstLength *
+          secondLength *
+          Math.sin(angleDifference) *
+          angleDot1 *
+          angleDot1 -
+        secondPivotDamping * angleDot2 -
+        jointFriction
+    ];
+
+    const acceleration = solveThreeByThree(
+      massMatrix,
+      generalizedForces
+    );
+
+    xDot += acceleration[0] * dt;
+    angleDot1 += acceleration[1] * dt;
+    angleDot2 += acceleration[2] * dt;
+
     x += xDot * dt;
 
-    angleDot += thetaAcceleration * dt;
-    angle += angleDot * dt;
-    angle = wrapAngle(angle);
+    angle1 = wrapAngle(
+      angle1 + angleDot1 * dt
+    );
 
+    angle2 = wrapAngle(
+      angle2 + angleDot2 * dt
+    );
+
+    /*
+     * The animation uses the doubled trackLimit here.
+     */
     if (enforceRail) {
       if (x > trackLimit) {
         x = trackLimit;
-        xDot = Math.min(0, xDot) * 0.25;
+        xDot = Math.min(0, xDot) * 0.22;
       }
 
       if (x < -trackLimit) {
         x = -trackLimit;
-        xDot = Math.max(0, xDot) * 0.25;
+        xDot = Math.max(0, xDot) * 0.22;
       }
     }
 
-    return [x, xDot, angle, angleDot];
+    return [
+      x,
+      xDot,
+      angle1,
+      angleDot1,
+      angle2,
+      angleDot2
+    ];
   }
 
-  function barrierCostDerivatives(x, weight) {
-    const effectiveLimit = trackLimit * 0.985;
-    const epsilon = 0.07;
+  function stateDifference(firstState, secondState) {
+    return [
+      firstState[0] - secondState[0],
+      firstState[1] - secondState[1],
+      wrapAngle(firstState[2] - secondState[2]),
+      firstState[3] - secondState[3],
+      wrapAngle(firstState[4] - secondState[4]),
+      firstState[5] - secondState[5]
+    ];
+  }
 
-    const distanceRight = Math.max(epsilon, effectiveLimit - x);
-    const distanceLeft = Math.max(epsilon, effectiveLimit + x);
+  function addToState(state, index, amount) {
+    const result = state.slice();
+
+    result[index] += amount;
+
+    if (index === 2 || index === 4) {
+      result[index] = wrapAngle(result[index]);
+    }
+
+    return result;
+  }
+
+  function dot(firstVector, secondVector) {
+    let value = 0;
+
+    for (
+      let index = 0;
+      index < firstVector.length;
+      index += 1
+    ) {
+      value += firstVector[index] * secondVector[index];
+    }
+
+    return value;
+  }
+
+  /*
+   * The controller barrier uses the same doubled trackLimit.
+   * It begins becoming strong at approximately 96% of the track.
+   */
+  function barrierDerivatives(position, weight) {
+    const effectiveLimit = trackLimit * 0.96;
+    const epsilon = 0.06;
+
+    const rightDistance = Math.max(
+      epsilon,
+      effectiveLimit - position
+    );
+
+    const leftDistance = Math.max(
+      epsilon,
+      effectiveLimit + position
+    );
 
     let cost =
       -weight *
-      (Math.log(distanceRight / effectiveLimit) +
-        Math.log(distanceLeft / effectiveLimit));
+      (
+        Math.log(rightDistance / effectiveLimit) +
+        Math.log(leftDistance / effectiveLimit)
+      );
 
-    let gradient = weight * (1 / distanceRight - 1 / distanceLeft);
+    let gradient =
+      weight *
+      (
+        1 / rightDistance -
+        1 / leftDistance
+      );
 
     let hessian =
       weight *
-      (1 / (distanceRight * distanceRight) +
-        1 / (distanceLeft * distanceLeft));
+      (
+        1 / (rightDistance * rightDistance) +
+        1 / (leftDistance * leftDistance)
+      );
 
-    const violation = Math.max(0, Math.abs(x) - effectiveLimit);
+    const violation = Math.max(
+      0,
+      Math.abs(position) - effectiveLimit
+    );
 
     if (violation > 0) {
-      const sign = Math.sign(x);
-      cost += 700 * violation * violation;
-      gradient += sign * 1400 * violation;
-      hessian += 1400;
+      cost += 650 * violation * violation;
+
+      gradient +=
+        Math.sign(position) * 1300 * violation;
+
+      hessian += 1300;
     }
 
-    return { cost, gradient, hessian };
+    return {
+      cost,
+      gradient,
+      hessian
+    };
   }
 
-  function stageCost(state, controlForce, terminal) {
-    const weights = terminal ? terminalWeights : stageWeights;
+  function costDerivatives(state, control, terminal) {
+    const weights = terminal
+      ? terminalWeights
+      : stageWeights;
 
-    const x = state[0];
-    const xDot = state[1];
-    const angle = wrapAngle(state[2]);
-    const angleDot = state[3];
+    const error = [
+      state[0] - desiredBoatPosition,
+      state[1],
+      wrapAngle(state[2]),
+      state[3],
+      wrapAngle(state[4]),
+      state[5]
+    ];
 
-    const cartError = x - desiredBoatPosition;
-    const barrier = barrierCostDerivatives(x, weights.barrier);
+    const barrier = barrierDerivatives(
+      state[0],
+      terminal ? 0.7 : 0.12
+    );
 
-    let cost =
-      weights.cart * cartError * cartError +
-      weights.cartVelocity * xDot * xDot +
-      weights.angle * angle * angle +
-      weights.angularVelocity * angleDot * angleDot +
-      barrier.cost;
+    const lx = error.map(
+      (value, index) =>
+        2 * weights[index] * value
+    );
+
+    const lxx = Array.from(
+      { length: stateDimension },
+      (_, row) =>
+        Array.from(
+          { length: stateDimension },
+          (_, column) =>
+            row === column
+              ? 2 * weights[row]
+              : 0
+        )
+    );
+
+    lx[0] += barrier.gradient;
+    lxx[0][0] += barrier.hessian;
+
+    return {
+      lx,
+      lxx,
+
+      lu: terminal
+        ? 0
+        : 2 * controlWeight * control,
+
+      luu: terminal
+        ? 0
+        : 2 * controlWeight
+    };
+  }
+
+  function stageCost(state, control, terminal) {
+    const weights = terminal
+      ? terminalWeights
+      : stageWeights;
+
+    const error = [
+      state[0] - desiredBoatPosition,
+      state[1],
+      wrapAngle(state[2]),
+      state[3],
+      wrapAngle(state[4]),
+      state[5]
+    ];
+
+    let cost = error.reduce(
+      (sum, value, index) =>
+        sum + weights[index] * value * value,
+      0
+    );
+
+    cost += barrierDerivatives(
+      state[0],
+      terminal ? 0.7 : 0.12
+    ).cost;
 
     if (!terminal) {
-      cost += stageWeights.control * controlForce * controlForce;
+      cost += controlWeight * control * control;
     }
-
-    return cost;
-  }
-
-  function stageCostDerivatives(state, controlForce, terminal) {
-    const weights = terminal ? terminalWeights : stageWeights;
-
-    const x = state[0];
-    const xDot = state[1];
-    const angle = wrapAngle(state[2]);
-    const angleDot = state[3];
-
-    const cartError = x - desiredBoatPosition;
-    const barrier = barrierCostDerivatives(x, weights.barrier);
-
-    const lx = [
-      2 * weights.cart * cartError + barrier.gradient,
-      2 * weights.cartVelocity * xDot,
-      2 * weights.angle * angle,
-      2 * weights.angularVelocity * angleDot
-    ];
-
-    const lxx = [
-      [2 * weights.cart + barrier.hessian, 0, 0, 0],
-      [0, 2 * weights.cartVelocity, 0, 0],
-      [0, 0, 2 * weights.angle, 0],
-      [0, 0, 0, 2 * weights.angularVelocity]
-    ];
-
-    const lu = terminal ? 0 : 2 * stageWeights.control * controlForce;
-    const luu = terminal ? 0 : 2 * stageWeights.control;
-
-    return { lx, lxx, lu, luu };
-  }
-
-  function trajectoryCost(states, controls) {
-    let cost = 0;
-
-    for (let k = 0; k < controls.length; k += 1) {
-      cost += stageCost(states[k], controls[k], false);
-    }
-
-    cost += stageCost(states[states.length - 1], 0, true);
 
     return cost;
   }
@@ -313,136 +612,318 @@
   function rollout(initialState, controls) {
     const states = [initialState.slice()];
 
-    for (let k = 0; k < controls.length; k += 1) {
-      const next = cartPoleNext(states[k], controls[k], planningDt, false);
-      states.push(next);
+    for (const control of controls) {
+      states.push(
+        doublePendulumNext(
+          states[states.length - 1],
+          control,
+          planningDt,
+          false
+        )
+      );
     }
 
     return states;
   }
 
-  function linearizeDynamics(state, controlForce) {
-    const stateEps = [0.003, 0.004, 0.002, 0.004];
-    const controlEps = 0.08;
+  function trajectoryCost(states, controls) {
+    let totalCost = 0;
 
-    const A = [
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0]
+    for (
+      let step = 0;
+      step < controls.length;
+      step += 1
+    ) {
+      totalCost += stageCost(
+        states[step],
+        controls[step],
+        false
+      );
+    }
+
+    totalCost += stageCost(
+      states[states.length - 1],
+      0,
+      true
+    );
+
+    return totalCost;
+  }
+
+  function linearizeDynamics(state, control) {
+    const stateEpsilon = [
+      0.003,
+      0.004,
+      0.002,
+      0.004,
+      0.002,
+      0.004
     ];
 
-    for (let column = 0; column < 4; column += 1) {
-      const plusState = addToState(state, column, stateEps[column]);
-      const minusState = addToState(state, column, -stateEps[column]);
+    const controlEpsilon = 0.09;
 
-      const plusNext = cartPoleNext(plusState, controlForce, planningDt, false);
-      const minusNext = cartPoleNext(minusState, controlForce, planningDt, false);
+    const A = Array.from(
+      { length: stateDimension },
+      () => new Array(stateDimension).fill(0)
+    );
 
-      const diff = stateDifference(plusNext, minusNext);
+    for (
+      let column = 0;
+      column < stateDimension;
+      column += 1
+    ) {
+      const plusState = addToState(
+        state,
+        column,
+        stateEpsilon[column]
+      );
 
-      for (let row = 0; row < 4; row += 1) {
-        A[row][column] = diff[row] / (2 * stateEps[column]);
+      const minusState = addToState(
+        state,
+        column,
+        -stateEpsilon[column]
+      );
+
+      const plusResult = doublePendulumNext(
+        plusState,
+        control,
+        planningDt,
+        false
+      );
+
+      const minusResult = doublePendulumNext(
+        minusState,
+        control,
+        planningDt,
+        false
+      );
+
+      const difference = stateDifference(
+        plusResult,
+        minusResult
+      );
+
+      for (
+        let row = 0;
+        row < stateDimension;
+        row += 1
+      ) {
+        A[row][column] =
+          difference[row] /
+          (2 * stateEpsilon[column]);
       }
     }
 
-    const plusControl = cartPoleNext(state, controlForce + controlEps, planningDt, false);
-    const minusControl = cartPoleNext(state, controlForce - controlEps, planningDt, false);
+    const plusControlResult = doublePendulumNext(
+      state,
+      control + controlEpsilon,
+      planningDt,
+      false
+    );
 
-    const controlDiff = stateDifference(plusControl, minusControl);
-    const B = controlDiff.map((value) => value / (2 * controlEps));
+    const minusControlResult = doublePendulumNext(
+      state,
+      control - controlEpsilon,
+      planningDt,
+      false
+    );
 
-    return { A, B };
+    const controlDifference = stateDifference(
+      plusControlResult,
+      minusControlResult
+    );
+
+    const B = controlDifference.map(
+      (value) =>
+        value / (2 * controlEpsilon)
+    );
+
+    return {
+      A,
+      B
+    };
   }
 
-  function matVec(matrix, vector) {
-    return matrix.map((row) => dot(row, vector));
-  }
+  function transposeTimesVector(matrix, vector) {
+    const result =
+      new Array(matrix[0].length).fill(0);
 
-  function transposeMatVec(matrix, vector) {
-    const result = new Array(matrix[0].length).fill(0);
-
-    for (let row = 0; row < matrix.length; row += 1) {
-      for (let col = 0; col < matrix[row].length; col += 1) {
-        result[col] += matrix[row][col] * vector[row];
+    for (
+      let row = 0;
+      row < matrix.length;
+      row += 1
+    ) {
+      for (
+        let column = 0;
+        column < matrix[row].length;
+        column += 1
+      ) {
+        result[column] +=
+          matrix[row][column] * vector[row];
       }
     }
 
     return result;
+  }
+
+  function matrixTimesVector(matrix, vector) {
+    return matrix.map(
+      (row) => dot(row, vector)
+    );
   }
 
   function atMa(A, M) {
-    const result = [
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0]
-    ];
+    const result = Array.from(
+      { length: stateDimension },
+      () => new Array(stateDimension).fill(0)
+    );
 
-    for (let i = 0; i < 4; i += 1) {
-      for (let j = 0; j < 4; j += 1) {
-        let value = 0;
-
-        for (let p = 0; p < 4; p += 1) {
-          for (let q = 0; q < 4; q += 1) {
-            value += A[p][i] * M[p][q] * A[q][j];
+    for (
+      let i = 0;
+      i < stateDimension;
+      i += 1
+    ) {
+      for (
+        let j = 0;
+        j < stateDimension;
+        j += 1
+      ) {
+        for (
+          let p = 0;
+          p < stateDimension;
+          p += 1
+        ) {
+          for (
+            let q = 0;
+            q < stateDimension;
+            q += 1
+          ) {
+            result[i][j] +=
+              A[p][i] *
+              M[p][q] *
+              A[q][j];
           }
         }
-
-        result[i][j] = value;
       }
     }
 
     return result;
   }
 
-  function bTMA(B, M, A) {
-    const result = [0, 0, 0, 0];
+  function bTMa(B, M, A) {
+    const result =
+      new Array(stateDimension).fill(0);
 
-    for (let j = 0; j < 4; j += 1) {
-      let value = 0;
-
-      for (let p = 0; p < 4; p += 1) {
-        for (let q = 0; q < 4; q += 1) {
-          value += B[p] * M[p][q] * A[q][j];
+    for (
+      let column = 0;
+      column < stateDimension;
+      column += 1
+    ) {
+      for (
+        let p = 0;
+        p < stateDimension;
+        p += 1
+      ) {
+        for (
+          let q = 0;
+          q < stateDimension;
+          q += 1
+        ) {
+          result[column] +=
+            B[p] *
+            M[p][q] *
+            A[q][column];
         }
       }
-
-      result[j] = value;
     }
 
     return result;
   }
 
   function symmetrize(matrix) {
-    for (let i = 0; i < 4; i += 1) {
-      for (let j = i + 1; j < 4; j += 1) {
-        const value = 0.5 * (matrix[i][j] + matrix[j][i]);
-        matrix[i][j] = value;
-        matrix[j][i] = value;
+    for (
+      let row = 0;
+      row < stateDimension;
+      row += 1
+    ) {
+      matrix[row][row] += 1e-7;
+
+      for (
+        let column = row + 1;
+        column < stateDimension;
+        column += 1
+      ) {
+        const average =
+          0.5 *
+          (
+            matrix[row][column] +
+            matrix[column][row]
+          );
+
+        matrix[row][column] = average;
+        matrix[column][row] = average;
       }
     }
 
     return matrix;
   }
 
-  function energySwingSeed(state, stepIndex) {
-    const x = state[0];
-    const xDot = state[1];
-    const angle = wrapAngle(state[2]);
-    const angleDot = state[3];
+  function energySwingSeed(state, step) {
+    const angle1 = wrapAngle(state[2]);
+    const angularVelocity1 = state[3];
 
-    const energy =
-      0.5 * Math.pow(poleLength * angleDot, 2) +
-      gravity * poleLength * (Math.cos(angle) - 1);
+    const angle2 = wrapAngle(state[4]);
+    const angularVelocity2 = state[5];
 
-    const pump = 18.0 * angleDot * Math.cos(angle) * energy;
-    const probing = 22.0 * Math.sin(performance.now() * 0.0024 + 0.45 * stepIndex);
-    const centering = -0.35 * (x - desiredBoatPosition) - 0.45 * xDot;
-    const barrier = barrierCostDerivatives(x, 0.01);
+    const firstEnergy =
+      0.5 *
+        Math.pow(
+          firstLength * angularVelocity1,
+          2
+        ) +
+      gravity *
+        firstLength *
+        (Math.cos(angle1) - 1);
+
+    const secondEnergy =
+      0.5 *
+        Math.pow(
+          secondLength * angularVelocity2,
+          2
+        ) +
+      gravity *
+        secondLength *
+        (Math.cos(angle2) - 1);
+
+    const pumping =
+      11.5 *
+        angularVelocity1 *
+        Math.cos(angle1) *
+        firstEnergy +
+      7.5 *
+        angularVelocity2 *
+        Math.cos(angle2) *
+        secondEnergy;
+
+    const probing =
+      14 *
+        Math.sin(
+          performance.now() * 0.0021 +
+          step * 0.42
+        ) +
+      5 *
+        Math.sin(
+          performance.now() * 0.0013 +
+          step * 0.19
+        );
+
+    const centering =
+      -1.25 *
+        (state[0] - desiredBoatPosition) -
+      0.9 * state[1];
 
     return clamp(
-      pump + probing + centering - 0.8 * barrier.gradient,
+      pumping + probing + centering,
       -maxControlForce,
       maxControlForce
     );
@@ -450,137 +931,260 @@
 
   function initialControlSequence(state) {
     const controls = [];
-    let simulated = state.slice();
+    let simulatedState = state.slice();
 
-    for (let k = 0; k < horizonSteps; k += 1) {
-      const u = energySwingSeed(simulated, k);
-      controls.push(u);
-      simulated = cartPoleNext(simulated, u, planningDt, false);
+    for (
+      let step = 0;
+      step < horizonSteps;
+      step += 1
+    ) {
+      const control = energySwingSeed(
+        simulatedState,
+        step
+      );
+
+      controls.push(control);
+
+      simulatedState = doublePendulumNext(
+        simulatedState,
+        control,
+        planningDt,
+        false
+      );
     }
 
     return controls;
   }
 
-  function optimizeWithILQR(initialState, initialControls) {
+  function optimizeWithILQR(
+    initialState,
+    initialControls
+  ) {
     let controls = initialControls.slice();
     let states = rollout(initialState, controls);
     let bestCost = trajectoryCost(states, controls);
 
-    for (let iteration = 0; iteration < ilqrIterations; iteration += 1) {
-      const feedforward = new Array(horizonSteps);
-      const feedback = new Array(horizonSteps);
+    for (
+      let iteration = 0;
+      iteration < ilqrIterations;
+      iteration += 1
+    ) {
+      const feedforward =
+        new Array(horizonSteps);
 
-      const terminal = stageCostDerivatives(states[states.length - 1], 0, true);
+      const feedback =
+        new Array(horizonSteps);
 
-      let Vx = terminal.lx.slice();
-      let Vxx = terminal.lxx.map((row) => row.slice());
+      const terminal = costDerivatives(
+        states[states.length - 1],
+        0,
+        true
+      );
 
-      let backwardPassFailed = false;
+      let valueGradient = terminal.lx.slice();
 
-      for (let k = horizonSteps - 1; k >= 0; k -= 1) {
-        const state = states[k];
-        const control = controls[k];
+      let valueHessian =
+        terminal.lxx.map(
+          (row) => row.slice()
+        );
 
-        const { A, B } = linearizeDynamics(state, control);
-        const derivatives = stageCostDerivatives(state, control, false);
+      let failed = false;
 
-        const lx = derivatives.lx;
-        const lxx = derivatives.lxx;
-        const lu = derivatives.lu;
-        const luu = derivatives.luu;
+      for (
+        let step = horizonSteps - 1;
+        step >= 0;
+        step -= 1
+      ) {
+        const state = states[step];
+        const control = controls[step];
 
-        const AtVx = transposeMatVec(A, Vx);
-        const BVx = dot(B, Vx);
+        const linearization =
+          linearizeDynamics(state, control);
 
-        const Qx = lx.map((value, i) => value + AtVx[i]);
-        const Qu = lu + BVx;
+        const A = linearization.A;
+        const B = linearization.B;
 
-        const AtVxxA = atMa(A, Vxx);
+        const derivatives = costDerivatives(
+          state,
+          control,
+          false
+        );
 
-        const Qxx = [
-          [0, 0, 0, 0],
-          [0, 0, 0, 0],
-          [0, 0, 0, 0],
-          [0, 0, 0, 0]
-        ];
+        const futureGradient =
+          transposeTimesVector(
+            A,
+            valueGradient
+          );
 
-        for (let i = 0; i < 4; i += 1) {
-          for (let j = 0; j < 4; j += 1) {
-            Qxx[i][j] = lxx[i][j] + AtVxxA[i][j];
-          }
-        }
+        const Qx = derivatives.lx.map(
+          (value, index) =>
+            value + futureGradient[index]
+        );
 
-        const VxxB = matVec(Vxx, B);
-        const Quu = luu + dot(B, VxxB) + 1e-4;
-        const Qux = bTMA(B, Vxx, A);
+        const Qu =
+          derivatives.lu +
+          dot(B, valueGradient);
 
-        if (!Number.isFinite(Quu) || Quu <= 1e-8) {
-          backwardPassFailed = true;
+        const hessianTimesB =
+          matrixTimesVector(
+            valueHessian,
+            B
+          );
+
+        const Quu =
+          derivatives.luu +
+          dot(B, hessianTimesB) +
+          0.0008;
+
+        if (
+          !Number.isFinite(Quu) ||
+          Quu <= 1e-8
+        ) {
+          failed = true;
           break;
         }
 
-        const kff = -Qu / Quu;
-        const K = Qux.map((value) => -value / Quu);
+        const futureQxx = atMa(
+          A,
+          valueHessian
+        );
 
-        feedforward[k] = kff;
-        feedback[k] = K;
+        const Qxx = derivatives.lxx.map(
+          (row, rowIndex) =>
+            row.map(
+              (value, columnIndex) =>
+                value +
+                futureQxx[rowIndex][columnIndex]
+            )
+        );
 
-        const newVx = new Array(4).fill(0);
-        const newVxx = [
-          [0, 0, 0, 0],
-          [0, 0, 0, 0],
-          [0, 0, 0, 0],
-          [0, 0, 0, 0]
-        ];
+        const Qux = bTMa(
+          B,
+          valueHessian,
+          A
+        );
 
-        for (let i = 0; i < 4; i += 1) {
-          newVx[i] =
+        const feedforwardControl =
+          -Qu / Quu;
+
+        const feedbackControl =
+          Qux.map(
+            (value) => -value / Quu
+          );
+
+        feedforward[step] =
+          feedforwardControl;
+
+        feedback[step] =
+          feedbackControl;
+
+        const nextGradient =
+          new Array(stateDimension).fill(0);
+
+        const nextHessian = Array.from(
+          { length: stateDimension },
+          () =>
+            new Array(stateDimension).fill(0)
+        );
+
+        for (
+          let i = 0;
+          i < stateDimension;
+          i += 1
+        ) {
+          nextGradient[i] =
             Qx[i] +
-            K[i] * Quu * kff +
-            K[i] * Qu +
-            Qux[i] * kff;
-        }
+            feedbackControl[i] *
+              Quu *
+              feedforwardControl +
+            feedbackControl[i] * Qu +
+            Qux[i] * feedforwardControl;
 
-        for (let i = 0; i < 4; i += 1) {
-          for (let j = 0; j < 4; j += 1) {
-            newVxx[i][j] =
+          for (
+            let j = 0;
+            j < stateDimension;
+            j += 1
+          ) {
+            nextHessian[i][j] =
               Qxx[i][j] +
-              K[i] * Quu * K[j] +
-              K[i] * Qux[j] +
-              Qux[i] * K[j];
+              feedbackControl[i] *
+                Quu *
+                feedbackControl[j] +
+              feedbackControl[i] * Qux[j] +
+              Qux[i] * feedbackControl[j];
           }
         }
 
-        Vx = newVx;
-        Vxx = symmetrize(newVxx);
+        valueGradient = nextGradient;
+        valueHessian =
+          symmetrize(nextHessian);
       }
 
-      if (backwardPassFailed) break;
+      if (failed) break;
 
-      const lineSearch = [1.0, 0.55, 0.25, 0.1];
       let accepted = false;
 
-      for (const alpha of lineSearch) {
+      const lineSearchValues = [
+        1,
+        0.55,
+        0.25,
+        0.1
+      ];
+
+      for (const alpha of lineSearchValues) {
         const candidateControls = [];
-        const candidateStates = [initialState.slice()];
 
-        for (let k = 0; k < horizonSteps; k += 1) {
-          const dx = stateDifference(candidateStates[k], states[k]);
-          const correction = alpha * feedforward[k] + dot(feedback[k], dx);
+        const candidateStates = [
+          initialState.slice()
+        ];
 
-          const u = clamp(
-            controls[k] + correction,
+        for (
+          let step = 0;
+          step < horizonSteps;
+          step += 1
+        ) {
+          const difference = stateDifference(
+            candidateStates[step],
+            states[step]
+          );
+
+          const correction =
+            alpha * feedforward[step] +
+            dot(
+              feedback[step],
+              difference
+            );
+
+          const candidateControl = clamp(
+            controls[step] + correction,
             -maxControlForce,
             maxControlForce
           );
 
-          candidateControls.push(u);
-          candidateStates.push(cartPoleNext(candidateStates[k], u, planningDt, false));
+          candidateControls.push(
+            candidateControl
+          );
+
+          candidateStates.push(
+            doublePendulumNext(
+              candidateStates[step],
+              candidateControl,
+              planningDt,
+              false
+            )
+          );
         }
 
-        const candidateCost = trajectoryCost(candidateStates, candidateControls);
+        const candidateCost =
+          trajectoryCost(
+            candidateStates,
+            candidateControls
+          );
 
-        if (candidateCost < bestCost && Number.isFinite(candidateCost)) {
+        if (
+          Number.isFinite(candidateCost) &&
+          candidateCost < bestCost
+        ) {
           controls = candidateControls;
           states = candidateStates;
           bestCost = candidateCost;
@@ -595,246 +1199,474 @@
     return controls;
   }
 
-  function computeILQRControl() {
+  function computeControl() {
     const state = currentState();
-    const angle = wrapAngle(state[2]);
 
     let controls;
 
-    if (!controlPlan || controlPlan.length !== horizonSteps) {
-      controls = initialControlSequence(state);
+    if (
+      !controlPlan ||
+      controlPlan.length !== horizonSteps
+    ) {
+      controls =
+        initialControlSequence(state);
     } else {
       controls = controlPlan.slice();
 
-      if (Math.abs(angle) > 0.9) {
-        const seed = initialControlSequence(state);
+      const firstAngle =
+        Math.abs(wrapAngle(state[2]));
 
-        for (let k = 0; k < horizonSteps; k += 1) {
-          controls[k] = 0.65 * controls[k] + 0.35 * seed[k];
+      const secondAngle =
+        Math.abs(wrapAngle(state[4]));
+
+      if (
+        firstAngle > 0.75 ||
+        secondAngle > 0.75
+      ) {
+        const seed =
+          initialControlSequence(state);
+
+        for (
+          let step = 0;
+          step < horizonSteps;
+          step += 1
+        ) {
+          controls[step] =
+            0.68 * controls[step] +
+            0.32 * seed[step];
         }
       }
     }
 
-    const optimizedControls = optimizeWithILQR(state, controls);
-    const firstControl = optimizedControls[0];
+    const optimizedControls =
+      optimizeWithILQR(
+        state,
+        controls
+      );
 
-    controlPlan = optimizedControls.slice(1);
-    controlPlan.push(optimizedControls[optimizedControls.length - 1]);
+    const firstControl =
+      optimizedControls[0];
 
-    return clamp(firstControl, -maxControlForce, maxControlForce);
+    controlPlan =
+      optimizedControls.slice(1);
+
+    controlPlan.push(
+      optimizedControls[
+        optimizedControls.length - 1
+      ]
+    );
+
+    return clamp(
+      firstControl,
+      -maxControlForce,
+      maxControlForce
+    );
   }
 
   function stepDynamics(dt, controlForce) {
     let externalForce = 0;
 
     if (disturbanceTimeLeft > 0) {
+      disturbanceElapsed = Math.min(
+        disturbanceDuration,
+        disturbanceElapsed + dt
+      );
+
+      const progress =
+        disturbanceElapsed /
+        disturbanceDuration;
+
+      /*
+       * Smooth, physically plausible half-sine force pulse.
+       */
+      const envelope =
+        Math.sin(Math.PI * progress);
+
+      disturbanceForce =
+        disturbancePeakForce * envelope;
+
       externalForce = disturbanceForce;
-      disturbanceTimeLeft = Math.max(0, disturbanceTimeLeft - dt);
+
+      disturbanceTimeLeft = Math.max(
+        0,
+        disturbanceDuration -
+          disturbanceElapsed
+      );
+
       disturbanceFlash = 1;
     } else {
       disturbanceForce = 0;
-      disturbanceFlash = Math.max(0, disturbanceFlash - dt * 2.1);
+      disturbancePeakForce = 0;
+
+      disturbanceFlash = Math.max(
+        0,
+        disturbanceFlash - dt * 2.1
+      );
     }
 
+    /*
+     * Both the controller and disturbance enter through the
+     * same horizontal boat-force channel.
+     */
     const totalForce = clamp(
       controlForce + externalForce,
       -maxTotalForce,
       maxTotalForce
     );
 
-    const next = cartPoleNext(currentState(), totalForce, dt, true);
+    const nextState =
+      doublePendulumNext(
+        currentState(),
+        totalForce,
+        dt,
+        true
+      );
 
-    boatPosition = next[0];
-    boatVelocity = next[1];
-    theta = next[2];
-    thetaVelocity = next[3];
+    setCurrentState(nextState);
   }
 
-  function modelXToScreenX(x) {
+  /*
+   * Maps the complete physical interval [-12, 12] onto the canvas.
+   */
+  function modelXToScreenX(position) {
     const halfRange = width * 0.48;
-    return width * 0.5 + (x / trackLimit) * halfRange;
+
+    return (
+      width * 0.5 +
+      (position / trackLimit) * halfRange
+    );
+  }
+
+  function roundRect(
+    context,
+    x,
+    y,
+    boxWidth,
+    boxHeight,
+    radius
+  ) {
+    const r = Math.min(
+      radius,
+      boxWidth / 2,
+      boxHeight / 2
+    );
+
+    context.beginPath();
+    context.moveTo(x + r, y);
+
+    context.lineTo(
+      x + boxWidth - r,
+      y
+    );
+
+    context.quadraticCurveTo(
+      x + boxWidth,
+      y,
+      x + boxWidth,
+      y + r
+    );
+
+    context.lineTo(
+      x + boxWidth,
+      y + boxHeight - r
+    );
+
+    context.quadraticCurveTo(
+      x + boxWidth,
+      y + boxHeight,
+      x + boxWidth - r,
+      y + boxHeight
+    );
+
+    context.lineTo(
+      x + r,
+      y + boxHeight
+    );
+
+    context.quadraticCurveTo(
+      x,
+      y + boxHeight,
+      x,
+      y + boxHeight - r
+    );
+
+    context.lineTo(x, y + r);
+
+    context.quadraticCurveTo(
+      x,
+      y,
+      x + r,
+      y
+    );
+
+    context.closePath();
   }
 
   function drawBackground() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(
+      0,
+      0,
+      width,
+      height
+    );
 
-    ctx.save();
+    const gradient =
+      ctx.createLinearGradient(
+        0,
+        0,
+        width,
+        height
+      );
 
-    const panelGradient = ctx.createLinearGradient(0, 0, width, height);
-    panelGradient.addColorStop(0, "rgba(255, 255, 255, 0.02)");
-    panelGradient.addColorStop(1, "rgba(255, 255, 255, 0.01)");
+    gradient.addColorStop(
+      0,
+      "rgba(255, 255, 255, 0.025)"
+    );
 
-    ctx.fillStyle = panelGradient;
-    roundRect(ctx, width * 0.02, height * 0.10, width * 0.96, height * 0.80, 16);
+    gradient.addColorStop(
+      1,
+      "rgba(255, 255, 255, 0.008)"
+    );
+
+    ctx.fillStyle = gradient;
+
+    roundRect(
+      ctx,
+      width * 0.02,
+      height * 0.1,
+      width * 0.96,
+      height * 0.8,
+      16
+    );
+
     ctx.fill();
-
-    ctx.restore();
   }
 
   function drawWaterLine(y) {
+    const left =
+      modelXToScreenX(-trackLimit);
+
+    const right =
+      modelXToScreenX(trackLimit);
+
     ctx.save();
 
-    ctx.strokeStyle = "rgba(230, 245, 255, 0.20)";
+    ctx.strokeStyle =
+      "rgba(230, 245, 255, 0.20)";
+
     ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.moveTo(modelXToScreenX(-trackLimit), y);
-    ctx.lineTo(modelXToScreenX(trackLimit), y);
-    ctx.stroke();
 
-    ctx.strokeStyle = "rgba(173, 216, 230, 0.11)";
-    ctx.lineWidth = 1.0;
+    for (
+      let index = 0;
+      index <= 32;
+      index += 1
+    ) {
+      const ratio = index / 32;
 
-    const left = modelXToScreenX(-trackLimit);
-    const right = modelXToScreenX(trackLimit);
-    const span = right - left;
+      const x =
+        left +
+        (right - left) * ratio;
 
-    ctx.beginPath();
+      const wave =
+        Math.sin(
+          ratio * Math.PI * 10 +
+          performance.now() * 0.002
+        ) * 1.5;
 
-    for (let i = 0; i <= 24; i += 1) {
-      const t = i / 24;
-      const x = left + span * t;
-      const yy = y + Math.sin(t * Math.PI * 8 + performance.now() * 0.0022) * 1.6;
-
-      if (i === 0) ctx.moveTo(x, yy);
-      else ctx.lineTo(x, yy);
+      if (index === 0) {
+        ctx.moveTo(x, y + wave);
+      } else {
+        ctx.lineTo(x, y + wave);
+      }
     }
 
     ctx.stroke();
-
     ctx.restore();
   }
 
-  function drawBoat(centerX, waterY, boatWidth, boatHeight) {
-    const left = centerX - boatWidth / 2;
-    const right = centerX + boatWidth / 2;
-    const hullTop = waterY - boatHeight * 0.34;
-    const hullBottom = waterY + boatHeight * 0.08;
-    const bowX = right + boatWidth * 0.16;
-    const sternX = left - boatWidth * 0.10;
+  function drawBoat(
+    centerX,
+    waterY,
+    boatWidth,
+    boatHeight
+  ) {
+    const left =
+      centerX - boatWidth / 2;
+
+    const right =
+      centerX + boatWidth / 2;
+
+    const hullTop =
+      waterY - boatHeight * 0.34;
+
+    const hullBottom =
+      waterY + boatHeight * 0.1;
 
     ctx.save();
 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.12)";
+    ctx.fillStyle =
+      "rgba(0, 0, 0, 0.13)";
+
     ctx.beginPath();
-    ctx.ellipse(centerX, waterY + boatHeight * 0.42, boatWidth * 0.48, boatHeight * 0.20, 0, 0, Math.PI * 2);
+
+    ctx.ellipse(
+      centerX,
+      waterY + boatHeight * 0.42,
+      boatWidth * 0.48,
+      boatHeight * 0.2,
+      0,
+      0,
+      Math.PI * 2
+    );
+
     ctx.fill();
 
-    const hullGradient = ctx.createLinearGradient(left, hullTop, right, hullBottom);
-    hullGradient.addColorStop(0, "rgba(250, 251, 253, 0.56)");
-    hullGradient.addColorStop(1, "rgba(205, 219, 229, 0.46)");
+    const hullGradient =
+      ctx.createLinearGradient(
+        left,
+        hullTop,
+        right,
+        hullBottom
+      );
+
+    hullGradient.addColorStop(
+      0,
+      "rgba(250, 251, 253, 0.58)"
+    );
+
+    hullGradient.addColorStop(
+      1,
+      "rgba(205, 219, 229, 0.46)"
+    );
 
     ctx.fillStyle = hullGradient;
-    ctx.strokeStyle = "rgba(245, 250, 255, 0.58)";
+
+    ctx.strokeStyle =
+      "rgba(245, 250, 255, 0.58)";
+
     ctx.lineWidth = 1.2;
-
     ctx.beginPath();
-    ctx.moveTo(sternX + boatWidth * 0.12, hullTop);
-    ctx.lineTo(right - boatWidth * 0.08, hullTop);
-    ctx.quadraticCurveTo(bowX, hullTop + boatHeight * 0.10, right, hullBottom);
-    ctx.lineTo(left + boatWidth * 0.18, hullBottom);
-    ctx.quadraticCurveTo(sternX, hullBottom - boatHeight * 0.02, sternX + boatWidth * 0.12, hullTop);
+
+    ctx.moveTo(
+      left - boatWidth * 0.08,
+      hullTop
+    );
+
+    ctx.lineTo(
+      right - boatWidth * 0.08,
+      hullTop
+    );
+
+    ctx.quadraticCurveTo(
+      right + boatWidth * 0.15,
+      hullTop + boatHeight * 0.12,
+      right,
+      hullBottom
+    );
+
+    ctx.lineTo(
+      left + boatWidth * 0.16,
+      hullBottom
+    );
+
+    ctx.quadraticCurveTo(
+      left - boatWidth * 0.12,
+      hullBottom,
+      left - boatWidth * 0.08,
+      hullTop
+    );
+
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(120, 170, 190, 0.34)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(left + boatWidth * 0.12, hullTop + boatHeight * 0.02);
-    ctx.lineTo(right - boatWidth * 0.04, hullTop + boatHeight * 0.02);
-    ctx.stroke();
+    const cabinWidth =
+      boatWidth * 0.28;
 
-    const cabinX = left + boatWidth * 0.24;
-    const cabinY = hullTop - boatHeight * 0.36;
-    const cabinW = boatWidth * 0.27;
-    const cabinH = boatHeight * 0.28;
+    const cabinHeight =
+      boatHeight * 0.27;
 
-    ctx.fillStyle = "rgba(90, 106, 132, 0.34)";
-    roundRect(ctx, cabinX, cabinY, cabinW, cabinH, 4);
+    ctx.fillStyle =
+      "rgba(95, 112, 137, 0.36)";
+
+    roundRect(
+      ctx,
+      left + boatWidth * 0.25,
+      hullTop - cabinHeight,
+      cabinWidth,
+      cabinHeight,
+      4
+    );
+
     ctx.fill();
-
-    ctx.fillStyle = "rgba(245, 250, 255, 0.42)";
-    ctx.beginPath();
-    ctx.moveTo(cabinX - boatWidth * 0.02, cabinY + 2);
-    ctx.lineTo(cabinX + cabinW + boatWidth * 0.02, cabinY + 2);
-    ctx.lineTo(cabinX + cabinW - boatWidth * 0.01, cabinY - boatHeight * 0.07);
-    ctx.lineTo(cabinX + boatWidth * 0.04, cabinY - boatHeight * 0.07);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(240, 248, 255, 0.40)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(left + boatWidth * 0.08, hullTop - boatHeight * 0.08);
-    ctx.lineTo(left + boatWidth * 0.08, hullTop - boatHeight * 0.30);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(210, 236, 248, 0.42)";
-    const windowY = cabinY + cabinH * 0.36;
-    const w = boatWidth * 0.05;
-    const h = boatHeight * 0.07;
-
-    for (let i = 0; i < 3; i += 1) {
-      roundRect(ctx, cabinX + boatWidth * (0.03 + i * 0.07), windowY, w, h, 2);
-      ctx.fill();
-    }
-
-    ctx.fillStyle = "rgba(240, 248, 255, 0.48)";
-
-    for (let i = 0; i < 3; i += 1) {
-      ctx.beginPath();
-      ctx.arc(left + boatWidth * (0.28 + i * 0.18), hullTop + boatHeight * 0.18, boatHeight * 0.06, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.strokeStyle = "rgba(170, 225, 240, 0.38)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(right - boatWidth * 0.05, hullTop + boatHeight * 0.02);
-    ctx.lineTo(bowX - boatWidth * 0.03, hullBottom - boatHeight * 0.01);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(190, 230, 240, 0.14)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(left + boatWidth * 0.12, hullBottom + boatHeight * 0.10);
-    ctx.quadraticCurveTo(centerX, hullBottom + boatHeight * 0.32, right - boatWidth * 0.06, hullBottom + boatHeight * 0.10);
-    ctx.stroke();
-
     ctx.restore();
   }
 
-  function drawDisturbanceArrow(boatCenterX, waterY, boatWidth, boatHeight, scale) {
+  function drawDisturbanceArrow(
+    boatCenterX,
+    waterY,
+    boatWidth,
+    boatHeight,
+    scale
+  ) {
     if (disturbanceFlash <= 0) return;
 
-    const direction = disturbanceDirection || 1;
-    const activeRatio =
-      disturbanceDuration > 0
-        ? clamp(disturbanceTimeLeft / disturbanceDuration, 0, 1)
-        : 0;
+    const sourceSide =
+      disturbanceSourceSide || 1;
 
-    const forceRatio = clamp(Math.abs(disturbanceForce) / 145, 0.35, 1);
-    const alpha =
-      disturbanceTimeLeft > 0
-        ? 0.62
-        : Math.min(0.45, disturbanceFlash * 0.45);
+    const forceDirection =
+      -sourceSide;
 
-    const arrowLength = clamp(scale * (0.18 + 0.09 * forceRatio), 24, 42);
-    const gap = boatWidth * 0.15;
+    const forceRatio = clamp(
+      Math.abs(disturbancePeakForce) / 32,
+      0.35,
+      1
+    );
 
-    const y = waterY - boatHeight * 0.95;
+    const arrowLength = clamp(
+      scale *
+        (0.18 + 0.08 * forceRatio),
+      24,
+      42
+    );
+
+    const contactX =
+      boatCenterX +
+      sourceSide * boatWidth * 0.56;
 
     const startX =
-      direction > 0
-        ? boatCenterX + boatWidth * 0.56 + gap
-        : boatCenterX - boatWidth * 0.56 - gap;
+      contactX +
+      sourceSide *
+        (
+          arrowLength +
+          boatWidth * 0.12
+        );
 
-    const endX = startX + direction * arrowLength;
+    const endX = contactX;
+
+    const y =
+      waterY - boatHeight * 0.9;
+
+    const alpha =
+      disturbanceTimeLeft > 0
+        ? 0.66
+        : disturbanceFlash * 0.42;
+
+    const headSize = clamp(
+      scale * 0.045,
+      5,
+      7
+    );
 
     ctx.save();
 
-    ctx.strokeStyle = `rgba(235, 248, 255, ${alpha})`;
-    ctx.fillStyle = `rgba(235, 248, 255, ${alpha})`;
+    ctx.strokeStyle =
+      `rgba(235, 248, 255, ${alpha})`;
+
+    ctx.fillStyle =
+      `rgba(235, 248, 255, ${alpha})`;
+
     ctx.lineWidth = 1.8;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -844,156 +1676,322 @@
     ctx.lineTo(endX, y);
     ctx.stroke();
 
-    const headSize = clamp(scale * 0.045, 5, 7);
-
     ctx.beginPath();
     ctx.moveTo(endX, y);
-    ctx.lineTo(endX - direction * headSize, y - headSize * 0.55);
-    ctx.lineTo(endX - direction * headSize, y + headSize * 0.55);
+
+    ctx.lineTo(
+      endX -
+        forceDirection * headSize,
+      y - headSize * 0.55
+    );
+
+    ctx.lineTo(
+      endX -
+        forceDirection * headSize,
+      y + headSize * 0.55
+    );
+
     ctx.closePath();
     ctx.fill();
-
-    if (disturbanceTimeLeft > 0) {
-      ctx.strokeStyle = `rgba(170, 222, 235, ${0.22 + 0.18 * activeRatio})`;
-      ctx.lineWidth = 1.0;
-
-      const pulseX =
-        direction > 0
-          ? boatCenterX + boatWidth * 0.5
-          : boatCenterX - boatWidth * 0.5;
-
-      ctx.beginPath();
-      ctx.arc(
-        pulseX,
-        waterY - boatHeight * 0.25,
-        8 + (1 - activeRatio) * 10,
-        0,
-        Math.PI * 2
-      );
-      ctx.stroke();
-    }
 
     ctx.restore();
   }
 
-  function drawPendulum() {
-    const scale = Math.min(width, height);
-    const waterY = height * 0.76;
+  function drawRod(
+    startX,
+    startY,
+    endX,
+    endY,
+    alpha
+  ) {
+    ctx.strokeStyle =
+      `rgba(238, 247, 252, ${alpha})`;
 
-    const boatCenterX = modelXToScreenX(boatPosition);
-    const boatWidth = clamp(scale * 0.44, 72, 118);
-    const boatHeight = clamp(scale * 0.16, 18, 30);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = "round";
 
-    const pivotX = boatCenterX + boatWidth * 0.03;
-    const pivotY = waterY - boatHeight * 0.68;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+  }
 
-    const pendulumLength = clamp(scale * 0.32, 52, 84);
+  function drawJoint(
+    x,
+    y,
+    radius,
+    brightness
+  ) {
+    const gradient =
+      ctx.createRadialGradient(
+        x - radius * 0.25,
+        y - radius * 0.25,
+        1,
+        x,
+        y,
+        radius
+      );
 
-    const bobX = pivotX + pendulumLength * Math.sin(theta);
-    const bobY = pivotY - pendulumLength * Math.cos(theta);
+    gradient.addColorStop(
+      0,
+      `rgba(255, 255, 255, ${brightness})`
+    );
 
-    bobTrail.push({ x: bobX, y: bobY });
-    if (bobTrail.length > maxTrailLength) bobTrail.shift();
+    gradient.addColorStop(
+      0.5,
+      "rgba(216, 233, 239, 0.58)"
+    );
+
+    gradient.addColorStop(
+      1,
+      "rgba(146, 182, 194, 0.38)"
+    );
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      radius,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+  function drawDoublePendulum() {
+    const scale =
+      Math.min(width, height);
+
+    const waterY =
+      height * 0.78;
+
+    const boatCenterX =
+      modelXToScreenX(boatPosition);
+
+    const boatWidth = clamp(
+      scale * 0.42,
+      72,
+      116
+    );
+
+    const boatHeight = clamp(
+      scale * 0.15,
+      18,
+      29
+    );
+
+    const pivotX =
+      boatCenterX +
+      boatWidth * 0.03;
+
+    const pivotY =
+      waterY -
+      boatHeight * 0.68;
+
+    const firstDrawLength = clamp(
+      scale * 0.235,
+      37,
+      62
+    );
+
+    const secondDrawLength = clamp(
+      scale * 0.205,
+      33,
+      55
+    );
+
+    const firstJointX =
+      pivotX +
+      firstDrawLength *
+        Math.sin(theta1);
+
+    const firstJointY =
+      pivotY -
+      firstDrawLength *
+        Math.cos(theta1);
+
+    const secondBobX =
+      firstJointX +
+      secondDrawLength *
+        Math.sin(theta2);
+
+    const secondBobY =
+      firstJointY -
+      secondDrawLength *
+        Math.cos(theta2);
+
+    bobTrail.push({
+      x: secondBobX,
+      y: secondBobY
+    });
+
+    if (
+      bobTrail.length >
+      maxTrailLength
+    ) {
+      bobTrail.shift();
+    }
 
     ctx.save();
 
     drawWaterLine(waterY);
-    drawBoat(boatCenterX, waterY, boatWidth, boatHeight);
-    drawDisturbanceArrow(boatCenterX, waterY, boatWidth, boatHeight, scale);
 
-    for (let i = 1; i < bobTrail.length; i += 1) {
-      const previous = bobTrail[i - 1];
-      const current = bobTrail[i];
-      const age = i / bobTrail.length;
+    drawBoat(
+      boatCenterX,
+      waterY,
+      boatWidth,
+      boatHeight
+    );
 
-      ctx.strokeStyle = `rgba(182, 232, 242, ${0.012 + age * 0.15})`;
-      ctx.lineWidth = 0.45 + age * 0.95;
-      ctx.lineCap = "round";
+    drawDisturbanceArrow(
+      boatCenterX,
+      waterY,
+      boatWidth,
+      boatHeight,
+      scale
+    );
+
+    for (
+      let index = 1;
+      index < bobTrail.length;
+      index += 1
+    ) {
+      const previous =
+        bobTrail[index - 1];
+
+      const current =
+        bobTrail[index];
+
+      const age =
+        index / bobTrail.length;
+
+      ctx.strokeStyle =
+        `rgba(182, 232, 242, ${0.01 + age * 0.16})`;
+
+      ctx.lineWidth =
+        0.45 + age;
 
       ctx.beginPath();
-      ctx.moveTo(previous.x, previous.y);
-      ctx.lineTo(current.x, current.y);
+
+      ctx.moveTo(
+        previous.x,
+        previous.y
+      );
+
+      ctx.lineTo(
+        current.x,
+        current.y
+      );
+
       ctx.stroke();
     }
 
-    ctx.strokeStyle = "rgba(238, 247, 252, 0.62)";
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(pivotX, pivotY);
-    ctx.lineTo(bobX, bobY);
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(170, 222, 235, 0.34)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pivotX, pivotY);
-    ctx.lineTo(bobX, bobY);
-    ctx.stroke();
-
-    ctx.fillStyle = "rgba(245, 250, 255, 0.58)";
-    ctx.beginPath();
-    ctx.arc(pivotX, pivotY, 3.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    const bobGradient = ctx.createRadialGradient(
-      bobX - 2,
-      bobY - 2,
-      1,
-      bobX,
-      bobY,
-      10
+    drawRod(
+      pivotX,
+      pivotY,
+      firstJointX,
+      firstJointY,
+      0.66
     );
 
-    bobGradient.addColorStop(0, "rgba(255, 255, 255, 0.72)");
-    bobGradient.addColorStop(0.45, "rgba(216, 233, 239, 0.56)");
-    bobGradient.addColorStop(1, "rgba(146, 182, 194, 0.36)");
+    drawRod(
+      firstJointX,
+      firstJointY,
+      secondBobX,
+      secondBobY,
+      0.58
+    );
 
-    ctx.fillStyle = bobGradient;
-    ctx.beginPath();
-    ctx.arc(bobX, bobY, 8.6, 0, Math.PI * 2);
-    ctx.fill();
+    drawJoint(
+      pivotX,
+      pivotY,
+      3.5,
+      0.68
+    );
 
-    ctx.strokeStyle = "rgba(240, 250, 255, 0.32)";
-    ctx.lineWidth = 0.8;
-    ctx.stroke();
+    drawJoint(
+      firstJointX,
+      firstJointY,
+      6.2,
+      0.74
+    );
+
+    drawJoint(
+      secondBobX,
+      secondBobY,
+      8.2,
+      0.8
+    );
 
     ctx.restore();
   }
 
-  function roundRect(context, x, y, width, height, radius) {
-    const r = Math.min(radius, width / 2, height / 2);
-
-    context.beginPath();
-    context.moveTo(x + r, y);
-    context.lineTo(x + width - r, y);
-    context.quadraticCurveTo(x + width, y, x + width, y + r);
-    context.lineTo(x + width, y + height - r);
-    context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-    context.lineTo(x + r, y + height);
-    context.quadraticCurveTo(x, y + height, x, y + height - r);
-    context.lineTo(x, y + r);
-    context.quadraticCurveTo(x, y, x + r, y);
-    context.closePath();
-  }
-
   function animate(now) {
-    if (lastTime === null) lastTime = now;
+    if (lastTime === null) {
+      lastTime = now;
+    }
 
-    const dt = Math.min(0.024, (now - lastTime) / 1000);
+    const dt = Math.min(
+      0.024,
+      Math.max(
+        0.001,
+        (now - lastTime) / 1000
+      )
+    );
+
     lastTime = now;
 
-    const controlForce = computeILQRControl();
+    /*
+     * Replan every second frame.
+     */
+    if (
+      frameNumber % 2 === 0 ||
+      !controlPlan
+    ) {
+      lastRequestedControl =
+        computeControl();
+    }
 
-    const substeps = 3;
-    const subDt = dt / substeps;
+    frameNumber += 1;
 
-    for (let i = 0; i < substeps; i += 1) {
-      stepDynamics(subDt, controlForce);
+    /*
+     * Smooth actuator response.
+     */
+    const actuatorTimeConstant = 0.09;
+
+    const controlBlend =
+      1 -
+      Math.exp(
+        -dt / actuatorTimeConstant
+      );
+
+    appliedControlForce +=
+      (
+        lastRequestedControl -
+        appliedControlForce
+      ) *
+      controlBlend;
+
+    const substeps = 4;
+    const substepDt = dt / substeps;
+
+    for (
+      let step = 0;
+      step < substeps;
+      step += 1
+    ) {
+      stepDynamics(
+        substepDt,
+        appliedControlForce
+      );
     }
 
     drawBackground();
-    drawPendulum();
+    drawDoublePendulum();
 
     requestAnimationFrame(animate);
   }
