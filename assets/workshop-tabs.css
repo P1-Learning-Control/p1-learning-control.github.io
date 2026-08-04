@@ -1,4 +1,4 @@
-/* Workshop 1 navigation bar */
+/* Workshop navigation bar */
 
 .workshop-subnav {
   display: flex;
@@ -27,7 +27,10 @@
   text-decoration: none;
   white-space: nowrap;
   border-bottom: 3px solid transparent;
-  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
 
 .workshop-subnav a:hover {
@@ -42,7 +45,7 @@
   background: rgba(29, 78, 216, 0.08);
 }
 
-/* Workshop 1 home page */
+/* Workshop home page */
 
 .workshop-home {
   max-width: none;
@@ -59,7 +62,10 @@
   color: #ffffff;
   overflow: hidden;
   background-image:
-    linear-gradient(rgba(15, 23, 42, 0.24), rgba(15, 23, 42, 0.32)),
+    linear-gradient(
+      rgba(15, 23, 42, 0.24),
+      rgba(15, 23, 42, 0.32)
+    ),
     url("../assets/CopenhagenBack.jpg");
   background-size: cover;
   background-position: center;
@@ -319,6 +325,22 @@
 
 /* Venue and travel page */
 
+.venue-hero {
+  background-image:
+    linear-gradient(
+      rgba(15, 23, 42, 0.38),
+      rgba(15, 23, 42, 0.52)
+    ),
+    url("../assets/NBAV.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.venue-hero h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
 .map-frame {
   margin-top: 1.4rem;
   overflow: hidden;
@@ -418,7 +440,7 @@
     width: 240px;
     height: 82px;
     bottom: 0.45rem;
-    opacity: 0.60;
+    opacity: 0.6;
   }
 
   .loc-home-content {
