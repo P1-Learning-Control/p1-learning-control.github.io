@@ -194,6 +194,48 @@
   font-weight: 500;
 }
 
+/* Sponsors */
+
+.loc-sponsors {
+  max-width: 1040px;
+  margin: 3.5rem auto 0;
+  padding: 2.5rem 1.5rem 0;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+
+.loc-sponsors h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+}
+
+.sponsor-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2.5rem, 8vw, 6rem);
+  margin-top: 2rem;
+}
+
+.sponsor-logo {
+  display: block;
+  width: auto;
+  max-width: min(320px, 80vw);
+  object-fit: contain;
+}
+
+.sponsor-logo-pioneer {
+  max-height: 85px;
+}
+
+.sponsor-logo-ddsa {
+  max-height: 75px;
+}
+
 /* Program page */
 
 .program-table-wrap {
@@ -493,6 +535,24 @@
 
   .loc-date-line {
     font-size: 0.88rem;
+  }
+
+  .loc-sponsors {
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+  }
+
+  .sponsor-logos {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .sponsor-logo-pioneer {
+    max-height: 72px;
+  }
+
+  .sponsor-logo-ddsa {
+    max-height: 62px;
   }
 }
 
