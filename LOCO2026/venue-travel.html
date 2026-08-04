@@ -60,11 +60,17 @@
       </a>
     </nav>
 
-    <main>
+    <main class="venue-page">
       <section
         class="loc-hero venue-hero"
         aria-labelledby="venue-page-title"
       >
+        <canvas
+          id="venueAgentCanvas"
+          class="venue-agent-canvas"
+          aria-hidden="true"
+        ></canvas>
+
         <div class="loc-hero-content">
           <p class="eyebrow">
             LOCO 2026
@@ -80,126 +86,128 @@
         </div>
       </section>
 
-      <section
-        class="section"
-        aria-labelledby="venue"
-      >
-        <h2 id="venue">
-          Venue
-        </h2>
+      <div class="venue-content">
+        <section
+          class="section"
+          aria-labelledby="venue"
+        >
+          <h2 id="venue">
+            Venue
+          </h2>
 
-        <p>
-          LOCO 2026 will take place in Margrethe Bohr Salen
-          at the Niels Bohr Building, University of
-          Copenhagen.
-        </p>
+          <p>
+            LOCO 2026 will take place in Margrethe Bohr Salen
+            at the Niels Bohr Building, University of
+            Copenhagen.
+          </p>
 
-        <ul class="plain-list">
-          <li>
-            <strong>Institution:</strong>
-            University of Copenhagen
-          </li>
+          <ul class="plain-list">
+            <li>
+              <strong>Institution:</strong>
+              University of Copenhagen
+            </li>
 
-          <li>
-            <strong>Building:</strong>
-            Niels Bohr Building
-          </li>
+            <li>
+              <strong>Building:</strong>
+              Niels Bohr Building
+            </li>
 
-          <li>
-            <strong>Room:</strong>
-            Auditorium 001-0-EF.000 – Margrethe Bohr Salen
-          </li>
+            <li>
+              <strong>Room:</strong>
+              Auditorium 001-0-EF.000 – Margrethe Bohr Salen
+            </li>
 
-          <li>
-            <strong>Address:</strong>
-            Jagtvej 155, 2200 København N, Denmark
-          </li>
-        </ul>
-      </section>
+            <li>
+              <strong>Address:</strong>
+              Jagtvej 155, 2200 København N, Denmark
+            </li>
+          </ul>
+        </section>
 
-      <section
-        class="section"
-        aria-labelledby="map"
-      >
-        <h2 id="map">
-          Map
-        </h2>
+        <section
+          class="section"
+          aria-labelledby="map"
+        >
+          <h2 id="map">
+            Map
+          </h2>
 
-        <p>
-          The map below shows the Niels Bohr Building at
-          Jagtvej 155, 2200 København N.
-        </p>
+          <p>
+            The map below shows the Niels Bohr Building at
+            Jagtvej 155, 2200 København N.
+          </p>
 
-        <p>
-          <a
-            href="https://www.google.com/maps/search/?api=1&amp;query=Niels+Bohr+Building,+Jagtvej+155,+2200+K%C3%B8benhavn+N,+Denmark"
-            target="_blank"
-            rel="noopener"
-          >
-            Open the venue in Google Maps
-          </a>
-        </p>
-
-        <div class="map-frame">
-          <iframe
-            title="Map showing the LOCO 2026 venue"
-            src="https://www.google.com/maps?q=Niels+Bohr+Building,+Jagtvej+155,+2200+K%C3%B8benhavn+N,+Denmark&amp;output=embed"
-            loading="lazy"
-            allowfullscreen
-            referrerpolicy="no-referrer-when-downgrade"
-          ></iframe>
-        </div>
-      </section>
-
-      <section
-        class="section"
-        aria-labelledby="travel"
-      >
-        <h2 id="travel">
-          Travel information
-        </h2>
-
-        <ul class="plain-list">
-          <li>
-            <strong>By metro:</strong>
-            Skjolds Plads on the M3 line is the closest
-            metro station. From the station, continue on foot
-            toward Jagtvej and the Niels Bohr Building.
-          </li>
-
-          <li>
-            <strong>From Copenhagen Airport:</strong>
-            The M2 metro departs from Terminal 3. Travel to
-            Kongens Nytorv, change to the M3 line, and
-            continue to Skjolds Plads.
-          </li>
-
-          <li>
-            <strong>From Copenhagen Central Station:</strong>
-            Board the M3 line at København H and travel
-            directly to Skjolds Plads.
-          </li>
-
-          <li>
-            <strong>By taxi:</strong>
-            Ask the driver to take you to the Niels Bohr
-            Building, Jagtvej 155, 2200 København N.
-          </li>
-
-          <li>
-            <strong>Journey planning:</strong>
-            Check current routes, departure times, and
-            possible service changes using
+          <p>
             <a
-              href="https://www.rejseplanen.dk/"
+              href="https://www.google.com/maps/search/?api=1&amp;query=Niels+Bohr+Building,+Jagtvej+155,+2200+K%C3%B8benhavn+N,+Denmark"
               target="_blank"
               rel="noopener"
             >
-              Rejseplanen
-            </a>.
-          </li>
-        </ul>
-      </section>
+              Open the venue in Google Maps
+            </a>
+          </p>
+
+          <div class="map-frame">
+            <iframe
+              title="Map showing the LOCO 2026 venue"
+              src="https://www.google.com/maps?q=Niels+Bohr+Building,+Jagtvej+155,+2200+K%C3%B8benhavn+N,+Denmark&amp;output=embed"
+              loading="lazy"
+              allowfullscreen
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </section>
+
+        <section
+          class="section"
+          aria-labelledby="travel"
+        >
+          <h2 id="travel">
+            Travel information
+          </h2>
+
+          <ul class="plain-list">
+            <li>
+              <strong>By metro:</strong>
+              Skjolds Plads on the M3 line is the closest
+              metro station. From the station, continue on foot
+              toward Jagtvej and the Niels Bohr Building.
+            </li>
+
+            <li>
+              <strong>From Copenhagen Airport:</strong>
+              The M2 metro departs from Terminal 3. Travel to
+              Kongens Nytorv, change to the M3 line, and
+              continue to Skjolds Plads.
+            </li>
+
+            <li>
+              <strong>From Copenhagen Central Station:</strong>
+              Board the M3 line at København H and travel
+              directly to Skjolds Plads.
+            </li>
+
+            <li>
+              <strong>By taxi:</strong>
+              Ask the driver to take you to the Niels Bohr
+              Building, Jagtvej 155, 2200 København N.
+            </li>
+
+            <li>
+              <strong>Journey planning:</strong>
+              Check current routes, departure times, and
+              possible service changes using
+              <a
+                href="https://www.rejseplanen.dk/"
+                target="_blank"
+                rel="noopener"
+              >
+                Rejseplanen
+              </a>.
+            </li>
+          </ul>
+        </section>
+      </div>
     </main>
 
     <footer class="footer">
@@ -214,5 +222,7 @@
         P1 program.
       </p>
     </footer>
+
+    <script src="../assets/venue-agents.js"></script>
   </body>
 </html>
