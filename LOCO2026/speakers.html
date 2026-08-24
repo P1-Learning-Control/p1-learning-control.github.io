@@ -12,8 +12,353 @@
     <link rel="stylesheet" href="../assets/workshop-tabs.css">
 
     <style>
+      /*
+       * Keep the existing speaker image appearance.
+       * Width, height, object-fit, border-radius and shadow
+       * continue to come from workshop-tabs.css.
+       */
       .speaker-photo {
         object-position: center 25%;
+      }
+
+      /* ==========================================================
+         SPEAKERS PAGE
+         ========================================================== */
+
+      .speakers-section {
+        width: min(1120px, calc(100% - 3rem));
+        margin: 0 auto;
+        padding: 3.5rem 0 4.5rem;
+      }
+
+      .speakers-page-title {
+        margin: 0 0 3.75rem;
+
+        color: var(--ink);
+        text-align: center;
+
+        font-family: inherit;
+        font-size: clamp(2.35rem, 4.5vw, 3.4rem);
+        font-weight: 700;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+      }
+
+      /* ==========================================================
+         SPEAKER GRID
+
+         Alexandre      Anders       John
+
+               Leif          Yevgeny
+         ========================================================== */
+
+      .speakers-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+
+        column-gap: 1.5rem;
+        row-gap: 3.75rem;
+
+        width: 100%;
+        margin: 0 auto;
+
+        align-items: start;
+      }
+
+      .speakers-grid .speaker-profile {
+        display: flex;
+        flex-direction: column;
+
+        width: 300px;
+        max-width: 100%;
+
+        gap: 0;
+        padding: 0;
+
+        justify-self: center;
+        align-items: stretch;
+
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+      }
+
+      /* ---------- top row ---------- */
+
+      .speakers-grid .speaker-profile:nth-child(1) {
+        grid-column: 1 / span 2;
+      }
+
+      .speakers-grid .speaker-profile:nth-child(2) {
+        grid-column: 3 / span 2;
+      }
+
+      .speakers-grid .speaker-profile:nth-child(3) {
+        grid-column: 5 / span 2;
+      }
+
+      /* ---------- centered bottom row ---------- */
+
+      .speakers-grid .speaker-profile:nth-child(4) {
+        grid-column: 2 / span 2;
+      }
+
+      .speakers-grid .speaker-profile:nth-child(5) {
+        grid-column: 4 / span 2;
+      }
+
+      /* ==========================================================
+         SPEAKER INFORMATION
+         ========================================================== */
+
+      .speakers-grid .speaker-info {
+        display: flex;
+        flex-direction: column;
+
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      /* ---------- speaker name ---------- */
+
+      .speakers-grid .speaker-info h3 {
+        min-height: 2.15rem;
+        margin: 0 0 0.3rem;
+
+        color: var(--ink);
+
+        font-family: inherit;
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -0.025em;
+      }
+
+      /* ---------- affiliation ---------- */
+
+      /*
+       * Small minimum height keeps the talk titles aligned,
+       * but pulls them noticeably closer to the affiliation.
+       */
+      .speakers-grid .speaker-affiliation {
+        min-height: 2.9rem;
+        margin: 0 0 0.3rem;
+
+        color: var(--muted);
+
+        font-size: 1.03rem;
+        line-height: 1.4;
+        font-style: italic;
+      }
+
+      /* ==========================================================
+         TALK TITLE
+         ========================================================== */
+
+      .speakers-grid .speaker-talk-title {
+        display: flex;
+        align-items: flex-start;
+
+        min-height: 4.2rem;
+        margin: 0 0 0.8rem;
+
+        color: var(--ink);
+
+        font-family: inherit;
+        font-size: 1.06rem;
+        font-weight: 650;
+        line-height: 1.42;
+        letter-spacing: -0.015em;
+      }
+
+      .speakers-grid .speaker-talk-title strong {
+        font-weight: 650;
+      }
+
+      /* ==========================================================
+         EXPANDABLE ABSTRACT
+         ========================================================== */
+
+      .speaker-abstract-details {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+
+        border-top: 1px solid var(--line);
+      }
+
+      .speaker-abstract-details summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        width: 100%;
+        gap: 1.0rem;
+
+        padding: 0.8rem 0;
+
+        color: var(--control-blue);
+        background: transparent;
+
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        line-height: 1.3;
+
+        cursor: pointer;
+        list-style: none;
+
+        transition: color 150ms ease;
+      }
+
+      .speaker-abstract-details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .speaker-abstract-details summary::after {
+        content: "+";
+
+        flex: 0 0 auto;
+
+        color: var(--muted);
+
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .speaker-abstract-details[open] summary::after {
+        content: "−";
+        color: var(--control-blue);
+      }
+
+      .speaker-abstract-details summary:hover {
+        color: var(--ink);
+      }
+
+      .speaker-abstract-details summary:focus-visible {
+        outline: 2px solid var(--control-blue);
+        outline-offset: 3px;
+      }
+
+      .speaker-abstract-details .speaker-abstract {
+        margin: 0;
+        padding: 0.1rem 0 1.1rem;
+
+        color: var(--muted);
+
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.68;
+      }
+
+      .speaker-abstract-details .speaker-abstract p {
+        margin: 0 0 0.9rem;
+      }
+
+      .speaker-abstract-details .speaker-abstract p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* ==========================================================
+         TABLET
+         ========================================================== */
+
+      @media (max-width: 980px) {
+        .speakers-section {
+          width: min(720px, calc(100% - 2rem));
+        }
+
+        .speakers-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          column-gap: 1.5rem;
+          row-gap: 3.5rem;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(1) {
+          grid-column: 1 / span 2;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(2) {
+          grid-column: 3 / span 2;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(3) {
+          grid-column: 1 / span 2;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(4) {
+          grid-column: 3 / span 2;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(5) {
+          grid-column: 2 / span 2;
+        }
+
+        /*
+         * workshop-tabs.css already changes the image
+         * size to 260px at this viewport width.
+         */
+        .speakers-grid .speaker-profile {
+          width: 260px;
+        }
+
+        .speakers-grid .speaker-affiliation {
+          min-height: 3rem;
+        }
+
+        .speakers-grid .speaker-talk-title {
+          min-height: 8.2rem;
+        }
+      }
+
+      /* ==========================================================
+         MOBILE
+         ========================================================== */
+
+      @media (max-width: 620px) {
+        .speakers-section {
+          width: min(100% - 2rem, 300px);
+          padding-top: 2.5rem;
+          padding-bottom: 3.5rem;
+        }
+
+        .speakers-page-title {
+          margin-bottom: 2.75rem;
+          font-size: clamp(2.1rem, 11vw, 2.8rem);
+        }
+
+        .speakers-grid {
+          grid-template-columns: 1fr;
+          row-gap: 3rem;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(1),
+        .speakers-grid .speaker-profile:nth-child(2),
+        .speakers-grid .speaker-profile:nth-child(3),
+        .speakers-grid .speaker-profile:nth-child(4),
+        .speakers-grid .speaker-profile:nth-child(5) {
+          grid-column: 1;
+        }
+
+        .speakers-grid .speaker-profile {
+          width: 260px;
+        }
+
+        .speakers-grid .speaker-info h3,
+        .speakers-grid .speaker-affiliation,
+        .speakers-grid .speaker-talk-title {
+          min-height: 0;
+        }
+
+        .speakers-grid .speaker-affiliation {
+          margin-bottom: 0.3rem;
+        }
+
+        .speakers-grid .speaker-talk-title {
+          margin-bottom: 1rem;
+        }
       }
     </style>
   </head>
@@ -41,38 +386,37 @@
     </nav>
 
     <main>
-      <section class="hero">
-        <div class="hero-content">
-          <p class="eyebrow">LOCO 2026</p>
-          <h1>Speakers</h1>
-        </div>
-      </section>
+      <section
+        class="speakers-section"
+        aria-labelledby="speakers-heading"
+      >
+        <h1 id="speakers-heading" class="speakers-page-title">
+          Speakers
+        </h1>
 
-      <section class="section" aria-labelledby="speakers-heading">
-        <h2 id="speakers-heading">Speakers</h2>
-        <p class="speakers-announcement">More to be announced</p>
+        <div class="speakers-grid">
 
-        <div class="speaker-list">
-
-          <!-- Yevgeny Seldin -->
+          <!-- ==================================================
+               1. Alexandre Proutiere
+               ================================================== -->
 
           <article class="speaker-profile">
             <img
-              src="../assets/people/yevgeny.png"
-              alt="Yevgeny Seldin"
+              src="../assets/people/alexandre.jpg"
+              alt="Alexandre Proutiere"
               class="speaker-photo"
             >
 
             <div class="speaker-info">
               <h3>
-                Yevgeny Seldin
+                Alexandre Proutiere
 
                 <a
                   class="speaker-website"
-                  href="https://sites.google.com/site/yevgenyseldin"
+                  href="https://people.kth.se/~alepro/"
                   target="_blank"
                   rel="noopener"
-                  aria-label="Yevgeny Seldin website"
+                  aria-label="Alexandre Proutiere website"
                   title="Website"
                 >
                   🌐
@@ -80,23 +424,57 @@
               </h3>
 
               <p class="speaker-affiliation">
-                Professor, University of Copenhagen
+                Professor, KTH Royal Institute of Technology
               </p>
 
               <p class="speaker-talk-title">
                 <strong>
-                  Best-of-both-worlds online learning in stochastic and
-                  adversarial environments.
+                  Rank-adaptive Inference: Fundamental Limits and
+                  System Identification
                 </strong>
               </p>
 
-              <p class="speaker-abstract">
-                <strong>Abstract:</strong> TBD
-              </p>
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    Many high-dimensional estimation problems involve matrices
+                    whose effective complexity is much smaller than their
+                    ambient dimension, but whose rank is unknown a priori.
+                    In this talk, I will present a rank-adaptive approach based
+                    on singular-value thresholding, which automatically
+                    balances the statistical cost of estimating additional
+                    singular directions against the approximation error of
+                    discarding them.
+                  </p>
+
+                  <p>
+                    I will first discuss near-optimal guarantees and
+                    instance-dependent limits for general high-dimensional
+                    matrix estimation, and then show how the same principle
+                    leads to a rank-adaptive system identification method based
+                    on a thresholded Ho–Kalman algorithm. The resulting
+                    procedure can recover the system order and estimate its
+                    dynamics without prior knowledge of the order, while
+                    achieving finite-sample guarantees comparable to methods
+                    that know it in advance.
+                  </p>
+
+                  <p>
+                    Joint work with Yassir Jedra (Imperial College) and
+                    Frederic Zheng (KTH).
+                  </p>
+                </div>
+              </details>
             </div>
           </article>
 
-          <!-- Anders Rantzer -->
+          <!-- ==================================================
+               2. Anders Rantzer
+               ================================================== -->
 
           <article class="speaker-profile">
             <img
@@ -131,63 +509,37 @@
                 </strong>
               </p>
 
-              <p class="speaker-abstract">
-                <strong>Abstract:</strong>
-                The term "dual control" was introduced by Feldbaum in 1960 to
-                describe the tradeoff between exploration and exploitation in
-                the context of systems whose parameters are initially unknown
-                and must be learned by active probing. The lecture will compare
-                recent work on minimax dynamic games for dual control with two
-                dominating branches of past literature: self-tuning adaptive
-                control and statistical regret minimization. In particular, we
-                will show that Feldbaum's hyperstate, which combines the
-                physical state with an information state, has a particularly
-                clean representation in the minimax case, enabling explicit
-                expressions for optimal dual controllers.
-              </p>
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    The term "dual control" was introduced by Feldbaum in 1960
+                    to describe the tradeoff between exploration and
+                    exploitation in the context of systems whose parameters are
+                    initially unknown and must be learned by active probing.
+                  </p>
+
+                  <p>
+                    The lecture will compare recent work on minimax dynamic
+                    games for dual control with two dominating branches of past
+                    literature: self-tuning adaptive control and statistical
+                    regret minimization. In particular, we will show that
+                    Feldbaum's hyperstate, which combines the physical state
+                    with an information state, has a particularly clean
+                    representation in the minimax case, enabling explicit
+                    expressions for optimal dual controllers.
+                  </p>
+                </div>
+              </details>
             </div>
           </article>
 
-          <!-- Leif Döring -->
-
-          <article class="speaker-profile">
-            <img
-              src="../assets/people/Leif.png"
-              alt="Leif Döring"
-              class="speaker-photo"
-            >
-
-            <div class="speaker-info">
-              <h3>
-                Leif Döring
-
-                <a
-                  class="speaker-website"
-                  href="https://www.wim.uni-mannheim.de/doering/"
-                  target="_blank"
-                  rel="noopener"
-                  aria-label="Leif Döring website"
-                  title="Website"
-                >
-                  🌐
-                </a>
-              </h3>
-
-              <p class="speaker-affiliation">
-                Professor, University of Mannheim
-              </p>
-
-              <p class="speaker-talk-title">
-                <strong>Title:</strong> TBD
-              </p>
-
-              <p class="speaker-abstract">
-                <strong>Abstract:</strong> TBD
-              </p>
-            </div>
-          </article>
-
-          <!-- John Leth -->
+          <!-- ==================================================
+               3. John Leth
+               ================================================== -->
 
           <article class="speaker-profile">
             <img
@@ -217,34 +569,46 @@
               </p>
 
               <p class="speaker-talk-title">
-                <strong>Title:</strong> TBD
+                <strong>
+                  Title TBD
+                </strong>
               </p>
 
-              <p class="speaker-abstract">
-                <strong>Abstract:</strong> TBD
-              </p>
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    TBD
+                  </p>
+                </div>
+              </details>
             </div>
           </article>
 
-          <!-- Alexandre Proutiere -->
+          <!-- ==================================================
+               4. Leif Döring
+               ================================================== -->
 
           <article class="speaker-profile">
             <img
-              src="../assets/people/alexandre.jpg"
-              alt="Alexandre Proutiere"
+              src="../assets/people/Leif.png"
+              alt="Leif Döring"
               class="speaker-photo"
             >
 
             <div class="speaker-info">
               <h3>
-                Alexandre Proutiere
+                Leif Döring
 
                 <a
                   class="speaker-website"
-                  href="https://people.kth.se/~alepro/"
+                  href="https://www.wim.uni-mannheim.de/doering/"
                   target="_blank"
                   rel="noopener"
-                  aria-label="Alexandre Proutiere website"
+                  aria-label="Leif Döring website"
                   title="Website"
                 >
                   🌐
@@ -252,17 +616,78 @@
               </h3>
 
               <p class="speaker-affiliation">
-                Professor, KTH Royal Institute of Technology
+                Professor, University of Mannheim
               </p>
 
               <p class="speaker-talk-title">
-                <strong>Rank-adaptive Inference: Fundamental Limits and System Identification</strong> 
+                <strong>
+                  Title TBD
+                </strong>
               </p>
 
-              <p class="speaker-abstract">
-                <strong>Abstract:</strong> Many high-dimensional estimation problems involve matrices whose effective complexity is much smaller than their ambient dimension, but whose rank is unknown a priori. In this talk, I will present a rank-adaptive approach based on singular-value thresholding, which automatically balances the statistical cost of estimating additional singular directions against the approximation error of discarding them. I will first discuss near-optimal guarantees and instance-dependent limits for general high-dimensional matrix estimation, and then show how the same principle leads to a rank-adaptive system identification method based on a thresholded Ho–Kalman algorithm. The resulting procedure can recover the system order and estimate its dynamics without prior knowledge of the order, while achieving finite-sample guarantees comparable to methods that know it in advance. 
-                  Joint work with Yassir Jedra (Imperial College) and Frederic Zheng (KTH).
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    TBD
+                  </p>
+                </div>
+              </details>
+            </div>
+          </article>
+
+          <!-- ==================================================
+               5. Yevgeny Seldin
+               ================================================== -->
+
+          <article class="speaker-profile">
+            <img
+              src="../assets/people/yevgeny.png"
+              alt="Yevgeny Seldin"
+              class="speaker-photo"
+            >
+
+            <div class="speaker-info">
+              <h3>
+                Yevgeny Seldin
+
+                <a
+                  class="speaker-website"
+                  href="https://sites.google.com/site/yevgenyseldin"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Yevgeny Seldin website"
+                  title="Website"
+                >
+                  🌐
+                </a>
+              </h3>
+
+              <p class="speaker-affiliation">
+                Professor, University of Copenhagen
               </p>
+
+              <p class="speaker-talk-title">
+                <strong>
+                  Best-of-both-worlds Online Learning in Stochastic and
+                  Adversarial Environments
+                </strong>
+              </p>
+
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    TBD
+                  </p>
+                </div>
+              </details>
             </div>
           </article>
 
