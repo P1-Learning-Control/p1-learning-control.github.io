@@ -47,9 +47,9 @@
       /* ==========================================================
          SPEAKER GRID
 
-         Alexandre      Anders       John
+         Alexandre      Anders       Filipe
 
-               Leif          Yevgeny
+         John           Leif         Yevgeny
          ========================================================== */
 
       .speakers-grid {
@@ -97,14 +97,18 @@
         grid-column: 5 / span 2;
       }
 
-      /* ---------- centered bottom row ---------- */
+      /* ---------- bottom row ---------- */
 
       .speakers-grid .speaker-profile:nth-child(4) {
-        grid-column: 2 / span 2;
+        grid-column: 1 / span 2;
       }
 
       .speakers-grid .speaker-profile:nth-child(5) {
-        grid-column: 4 / span 2;
+        grid-column: 3 / span 2;
+      }
+
+      .speakers-grid .speaker-profile:nth-child(6) {
+        grid-column: 5 / span 2;
       }
 
       /* ==========================================================
@@ -193,7 +197,7 @@
         justify-content: space-between;
 
         width: 100%;
-        gap: 1.0rem;
+        gap: 1rem;
 
         padding: 0.8rem 0;
 
@@ -276,6 +280,14 @@
           row-gap: 3.5rem;
         }
 
+        /*
+         * Tablet:
+         *
+         * Alexandre      Anders
+         * Filipe         John
+         * Leif           Yevgeny
+         */
+
         .speakers-grid .speaker-profile:nth-child(1) {
           grid-column: 1 / span 2;
         }
@@ -293,7 +305,11 @@
         }
 
         .speakers-grid .speaker-profile:nth-child(5) {
-          grid-column: 2 / span 2;
+          grid-column: 1 / span 2;
+        }
+
+        .speakers-grid .speaker-profile:nth-child(6) {
+          grid-column: 3 / span 2;
         }
 
         /*
@@ -338,7 +354,8 @@
         .speakers-grid .speaker-profile:nth-child(2),
         .speakers-grid .speaker-profile:nth-child(3),
         .speakers-grid .speaker-profile:nth-child(4),
-        .speakers-grid .speaker-profile:nth-child(5) {
+        .speakers-grid .speaker-profile:nth-child(5),
+        .speakers-grid .speaker-profile:nth-child(6) {
           grid-column: 1;
         }
 
@@ -538,7 +555,58 @@
           </article>
 
           <!-- ==================================================
-               3. John Leth
+               3. Filipe Rodrigues
+               ================================================== -->
+
+          <article class="speaker-profile">
+            <img
+              src="../assets/people/FilipeR.jpg"
+              alt="Filipe Rodrigues"
+              class="speaker-photo"
+            >
+
+            <div class="speaker-info">
+              <h3>
+                Filipe Rodrigues
+
+                <a
+                  class="speaker-website"
+                  href="https://fprodrigues.com/"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Filipe Rodrigues website"
+                  title="Website"
+                >
+                  🌐
+                </a>
+              </h3>
+
+              <p class="speaker-affiliation">
+                Associate Professor, DTU
+              </p>
+
+              <p class="speaker-talk-title">
+                <strong>
+                  Title TBD
+                </strong>
+              </p>
+
+              <details class="speaker-abstract-details">
+                <summary>
+                  Abstract
+                </summary>
+
+                <div class="speaker-abstract">
+                  <p>
+                    TBD
+                  </p>
+                </div>
+              </details>
+            </div>
+          </article>
+
+          <!-- ==================================================
+               4. John Leth
                ================================================== -->
 
           <article class="speaker-profile">
@@ -589,7 +657,7 @@
           </article>
 
           <!-- ==================================================
-               4. Leif Döring
+               5. Leif Döring
                ================================================== -->
 
           <article class="speaker-profile">
@@ -640,7 +708,7 @@
           </article>
 
           <!-- ==================================================
-               5. Yevgeny Seldin
+               6. Yevgeny Seldin
                ================================================== -->
 
           <article class="speaker-profile">
