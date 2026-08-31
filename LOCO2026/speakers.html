@@ -587,7 +587,7 @@
 
               <p class="speaker-talk-title">
                 <strong>
-                  Title TBD
+                  Reinforcement Learning with an Optimizer in the Loop: Learning Targets Instead of Actions
                 </strong>
               </p>
 
@@ -598,7 +598,8 @@
 
                 <div class="speaker-abstract">
                   <p>
-                    TBD
+                    Many control problems are high-dimensional decisions that must respect hard constraints and be solved in seconds: rebalancing a fleet, routing inventory through a distribution network, keeping a power system within limits, driving a robot to a goal pose, etc. End-to-end reinforcement learning is fast at inference but does not, by itself, produce feasible actions. Optimization does, when the problem is feasible, but formulations that also model stochastic, non-linear dynamics get expensive over long horizons.
+                    In this talk, I describe a hierarchical alternative: a learned policy specifies a desired next state, and a convex program computes the action that best achieves it under the operational constraints. In our experiments, this is markedly more sample-efficient than end-to-end RL, returns actions that satisfy the constraints we encode, and ensures that graph policies transfer across network sizes and topologies. However, learning offline is more challenging, since the desired next state is typically not recorded, and the logs may come from a controller that was never hierarchical. To address this, we propose OHIO (Offline Hierarchical RL via Inverse Optimization) - a framework that uses the known structure of the lower-level optimizer to reconstruct the targets that explain the logged actions, or the logged transitions where actions are absent, yielding a dataset for off-the-shelf offline training. I will show results on network optimization and robotic problems, including online fine-tuning, and close on identifiability and on what a per-step feasibility guarantee does not say about the trajectory.
                   </p>
                 </div>
               </details>
@@ -638,7 +639,7 @@
 
               <p class="speaker-talk-title">
                 <strong>
-                  Title TBD
+                  A PAC-Bayes Approach to Learning Time Series
                 </strong>
               </p>
 
@@ -649,7 +650,7 @@
 
                 <div class="speaker-abstract">
                   <p>
-                    TBD
+                    In this talk, I will discuss a series of results on Probably Approximately Correct (PAC)-Bayes learning for stochastic dynamical systems, focusing mainly on linear time-invariant (LTI) stochastic systems in state-space form with inputs. The results extend PAC-Bayes analyses beyond static models and independent data to dynamical systems learned from non-i.i.d. time series. I will present generalization bounds whose dependence on the system’s memory is captured through mixing coefficients and which converge to zero as the amount of data increases. I will also consider partially observed LTI systems and show how PAC-Bayes bounds can provide finite-sample guarantees for both prediction and parameter estimation. These results offer a step toward PAC-Bayes learning guarantees for recurrent neural networks.
                   </p>
                 </div>
               </details>
