@@ -17,6 +17,38 @@
         opacity: 0.64;
       }
 
+      /* ==========================================================
+         PROGRAM TABLE DETAILS
+         ========================================================== */
+
+      .program-session-title {
+        color: var(--ink);
+        font-weight: 700;
+      }
+
+      .program-speaker {
+        display: block;
+        margin-bottom: 0.22rem;
+
+        color: var(--ink);
+        font-size: 1.03rem;
+        font-weight: 750;
+        line-height: 1.35;
+      }
+
+      .program-talk-title {
+        display: block;
+
+        color: var(--muted);
+        font-size: 0.97rem;
+        font-weight: 500;
+        line-height: 1.45;
+      }
+
+      .program-break td {
+        color: var(--muted);
+      }
+
       @media (max-width: 700px) {
         .bandit-hero {
           opacity: 0.4;
@@ -75,77 +107,188 @@
             </thead>
 
             <tbody>
-              <tr>
-                <td>09:00–09:30</td>
-                <td>Registration and Breakfast</td>
-              </tr>
+
+              <!-- Registration -->
 
               <tr>
-                <td>09:30–09:45</td>
+                <td>09:00–09:30</td>
                 <td>
-                  Opening Remarks and Introduction to the P1 Program
+                  <span class="program-session-title">
+                    Registration and Breakfast
+                  </span>
                 </td>
               </tr>
 
+              <!-- Opening -->
+
               <tr>
-                <td>09:45–10:30</td>
-                <td>Invited Talk I</td>
+                <td>09:30–09:35</td>
+                <td>
+                  <span class="program-session-title">
+                    Opening Remarks
+                  </span>
+                </td>
               </tr>
+
+              <!-- Anders Rantzer -->
+
+              <tr>
+                <td>09:35–10:20</td>
+                <td>
+                  <span class="program-speaker">
+                    Anders Rantzer
+                  </span>
+
+                  <span class="program-talk-title">
+                    Dual Control: On Exploration–Exploitation in Linear Systems
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Break -->
+
+              <tr class="program-break">
+                <td>10:20–10:30</td>
+                <td>
+                  <span class="program-session-title">
+                    Break
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Alexandre Proutiere -->
 
               <tr>
                 <td>10:30–11:15</td>
-                <td>Invited Talk II</td>
+                <td>
+                  <span class="program-speaker">
+                    Alexandre Proutiere
+                  </span>
+
+                  <span class="program-talk-title">
+                    Rank-adaptive Inference: Fundamental Limits and
+                    System Identification
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>11:15–11:35</td>
-                <td>Coffee Break</td>
+              <!-- Coffee Break -->
+
+              <tr class="program-break">
+                <td>11:15–11:30</td>
+                <td>
+                  <span class="program-session-title">
+                    Coffee Break
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>11:35–12:20</td>
-                <td>Invited Talk III</td>
-              </tr>
+              <!-- John Leth -->
 
               <tr>
-                <td>12:20–13:20</td>
-                <td>Lunch Break</td>
+                <td>11:30–12:15</td>
+                <td>
+                  <span class="program-speaker">
+                    John Leth
+                  </span>
+
+                  <span class="program-talk-title">
+                    A PAC-Bayes Approach to Learning Time Series
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>13:20–14:05</td>
-                <td>Invited Talk IV</td>
+              <!-- Lunch -->
+
+              <tr class="program-break">
+                <td>12:15–13:30</td>
+                <td>
+                  <span class="program-session-title">
+                    Lunch
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>14:05–15:20</td>
-                <td>Poster Session and Networking</td>
-              </tr>
+              <!-- Leif Döring -->
 
               <tr>
-                <td>15:20–15:40</td>
-                <td>Coffee Break</td>
+                <td>13:30–14:15</td>
+                <td>
+                  <span class="program-speaker">
+                    Leif Döring
+                  </span>
+
+                  <span class="program-talk-title">
+                    Some mathematical insights into key practical RL algorithms
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>15:40–16:25</td>
-                <td>Invited Talk V</td>
+              <!-- Break -->
+
+              <tr class="program-break">
+                <td>14:15–14:25</td>
+                <td>
+                  <span class="program-session-title">
+                    Break
+                  </span>
+                </td>
               </tr>
 
-              <tr>
-                <td>16:25–17:10</td>
-                <td>Invited Talk VI</td>
-              </tr>
+              <!-- Yevgeny Seldin -->
 
               <tr>
-                <td>17:10–17:30</td>
-                <td>Closing Remarks and Next Steps</td>
+                <td>14:25–15:10</td>
+                <td>
+                  <span class="program-speaker">
+                    Yevgeny Seldin
+                  </span>
+
+                  <span class="program-talk-title">
+                    Best-of-both-worlds Online Learning in Stochastic and
+                    Adversarial Environments
+                  </span>
+                </td>
               </tr>
 
+              <!-- Poster Session -->
+
               <tr>
-                <td>17:30</td>
-                <td>End of Workshop</td>
+                <td>15:10–16:10</td>
+                <td>
+                  <span class="program-session-title">
+                    Poster Session + Socializing
+                  </span>
+                </td>
               </tr>
+
+              <!-- Filipe Rodrigues -->
+
+              <tr>
+                <td>16:10–16:55</td>
+                <td>
+                  <span class="program-speaker">
+                    Filipe Rodrigues
+                  </span>
+
+                  <span class="program-talk-title">
+                    Reinforcement Learning with an Optimizer in the Loop:
+                    Learning Targets Instead of Actions
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Closing -->
+
+              <tr>
+                <td>16:55–17:00</td>
+                <td>
+                  <span class="program-session-title">
+                    Closing Remarks
+                  </span>
+                </td>
+              </tr>
+
             </tbody>
           </table>
         </div>
