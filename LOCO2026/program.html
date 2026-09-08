@@ -49,9 +49,51 @@
         color: var(--muted);
       }
 
+      /* ==========================================================
+         LOCO 2026 FOOTER LOGOS
+         ========================================================== */
+
+      .loco2026-footer-logos {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+
+        gap: clamp(2rem, 5vw, 4rem);
+        margin-bottom: 1.25rem;
+      }
+
+      .loco2026-footer-logos .footer-logo {
+        width: auto;
+        max-width: 260px;
+        max-height: 75px;
+        margin: 0;
+      }
+
+      .loco2026-footer-logos .footer-logo-ddsa {
+        max-width: 230px;
+        max-height: 68px;
+      }
+
       @media (max-width: 700px) {
         .bandit-hero {
           opacity: 0.4;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .loco2026-footer-logos {
+          gap: 1.5rem;
+        }
+
+        .loco2026-footer-logos .footer-logo {
+          max-width: 220px;
+          max-height: 65px;
+        }
+
+        .loco2026-footer-logos .footer-logo-ddsa {
+          max-width: 195px;
+          max-height: 58px;
         }
       }
     </style>
@@ -296,11 +338,22 @@
     </main>
 
     <footer class="footer">
-      <img
-        class="footer-logo"
-        src="https://media.licdn.com/dms/image/sync/v2/D4E27AQHSEIKapRSCYQ/articleshare-shrink_800/B4EZ2wB6bpIcAI-/0/1776774785412?e=2147483647&amp;v=beta&amp;t=bI_dzwOwftKAzQKsK8xwk6hrCPCp78a0L--nVTw03iE"
-        alt="Pioneer Centre for Artificial Intelligence"
+      <div
+        class="loco2026-footer-logos"
+        aria-label="LOCO 2026 supporters"
       >
+        <img
+          class="footer-logo"
+          src="https://media.licdn.com/dms/image/sync/v2/D4E27AQHSEIKapRSCYQ/articleshare-shrink_800/B4EZ2wB6bpIcAI-/0/1776774785412?e=2147483647&amp;v=beta&amp;t=bI_dzwOwftKAzQKsK8xwk6hrCPCp78a0L--nVTw03iE"
+          alt="Pioneer Centre for Artificial Intelligence"
+        >
+
+        <img
+          class="footer-logo footer-logo-ddsa"
+          src="../assets/DDSA-logo.png"
+          alt="Danish Data Science Academy"
+        >
+      </div>
 
       <p>
         Learning and Optimal Control in Dynamical Systems. P1 program.

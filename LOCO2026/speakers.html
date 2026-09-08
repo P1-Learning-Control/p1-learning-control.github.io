@@ -123,8 +123,6 @@
         margin-top: 1rem;
       }
 
-      /* ---------- speaker name ---------- */
-
       .speakers-grid .speaker-info h3 {
         min-height: 2.15rem;
         margin: 0 0 0.3rem;
@@ -138,12 +136,6 @@
         letter-spacing: -0.025em;
       }
 
-      /* ---------- affiliation ---------- */
-
-      /*
-       * Small minimum height keeps the talk titles aligned,
-       * but pulls them noticeably closer to the affiliation.
-       */
       .speakers-grid .speaker-affiliation {
         min-height: 2.9rem;
         margin: 0 0 0.3rem;
@@ -266,6 +258,32 @@
       }
 
       /* ==========================================================
+         LOCO 2026 FOOTER LOGOS
+         ========================================================== */
+
+      .loco2026-footer-logos {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+
+        gap: clamp(2rem, 5vw, 4rem);
+        margin-bottom: 1.25rem;
+      }
+
+      .loco2026-footer-logos .footer-logo {
+        width: auto;
+        max-width: 260px;
+        max-height: 75px;
+        margin: 0;
+      }
+
+      .loco2026-footer-logos .footer-logo-ddsa {
+        max-width: 230px;
+        max-height: 68px;
+      }
+
+      /* ==========================================================
          TABLET
          ========================================================== */
 
@@ -279,14 +297,6 @@
           column-gap: 1.5rem;
           row-gap: 3.5rem;
         }
-
-        /*
-         * Tablet:
-         *
-         * Alexandre      Anders
-         * Filipe         John
-         * Leif           Yevgeny
-         */
 
         .speakers-grid .speaker-profile:nth-child(1) {
           grid-column: 1 / span 2;
@@ -312,10 +322,6 @@
           grid-column: 3 / span 2;
         }
 
-        /*
-         * workshop-tabs.css already changes the image
-         * size to 260px at this viewport width.
-         */
         .speakers-grid .speaker-profile {
           width: 260px;
         }
@@ -377,6 +383,22 @@
           margin-bottom: 1rem;
         }
       }
+
+      @media (max-width: 560px) {
+        .loco2026-footer-logos {
+          gap: 1.5rem;
+        }
+
+        .loco2026-footer-logos .footer-logo {
+          max-width: 220px;
+          max-height: 65px;
+        }
+
+        .loco2026-footer-logos .footer-logo-ddsa {
+          max-width: 195px;
+          max-height: 58px;
+        }
+      }
     </style>
   </head>
 
@@ -413,9 +435,7 @@
 
         <div class="speakers-grid">
 
-          <!-- ==================================================
-               1. Alexandre Proutiere
-               ================================================== -->
+          <!-- Alexandre Proutiere -->
 
           <article class="speaker-profile">
             <img
@@ -452,9 +472,7 @@
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
@@ -489,9 +507,7 @@
             </div>
           </article>
 
-          <!-- ==================================================
-               2. Anders Rantzer
-               ================================================== -->
+          <!-- Anders Rantzer -->
 
           <article class="speaker-profile">
             <img
@@ -527,9 +543,7 @@
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
@@ -554,9 +568,7 @@
             </div>
           </article>
 
-          <!-- ==================================================
-               3. Filipe Rodrigues
-               ================================================== -->
+          <!-- Filipe Rodrigues -->
 
           <article class="speaker-profile">
             <img
@@ -587,28 +599,52 @@
 
               <p class="speaker-talk-title">
                 <strong>
-                  Reinforcement Learning with an Optimizer in the Loop: Learning Targets Instead of Actions
+                  Reinforcement Learning with an Optimizer in the Loop:
+                  Learning Targets Instead of Actions
                 </strong>
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
-                    Many control problems are high-dimensional decisions that must respect hard constraints and be solved in seconds: rebalancing a fleet, routing inventory through a distribution network, keeping a power system within limits, driving a robot to a goal pose, etc. End-to-end reinforcement learning is fast at inference but does not, by itself, produce feasible actions. Optimization does, when the problem is feasible, but formulations that also model stochastic, non-linear dynamics get expensive over long horizons.
-                    In this talk, I describe a hierarchical alternative: a learned policy specifies a desired next state, and a convex program computes the action that best achieves it under the operational constraints. In our experiments, this is markedly more sample-efficient than end-to-end RL, returns actions that satisfy the constraints we encode, and ensures that graph policies transfer across network sizes and topologies. However, learning offline is more challenging, since the desired next state is typically not recorded, and the logs may come from a controller that was never hierarchical. To address this, we propose OHIO (Offline Hierarchical RL via Inverse Optimization) - a framework that uses the known structure of the lower-level optimizer to reconstruct the targets that explain the logged actions, or the logged transitions where actions are absent, yielding a dataset for off-the-shelf offline training. I will show results on network optimization and robotic problems, including online fine-tuning, and close on identifiability and on what a per-step feasibility guarantee does not say about the trajectory.
+                    Many control problems are high-dimensional decisions that
+                    must respect hard constraints and be solved in seconds:
+                    rebalancing a fleet, routing inventory through a
+                    distribution network, keeping a power system within limits,
+                    driving a robot to a goal pose, etc. End-to-end
+                    reinforcement learning is fast at inference but does not,
+                    by itself, produce feasible actions. Optimization does,
+                    when the problem is feasible, but formulations that also
+                    model stochastic, non-linear dynamics get expensive over
+                    long horizons. In this talk, I describe a hierarchical
+                    alternative: a learned policy specifies a desired next
+                    state, and a convex program computes the action that best
+                    achieves it under the operational constraints. In our
+                    experiments, this is markedly more sample-efficient than
+                    end-to-end RL, returns actions that satisfy the constraints
+                    we encode, and ensures that graph policies transfer across
+                    network sizes and topologies. However, learning offline is
+                    more challenging, since the desired next state is typically
+                    not recorded, and the logs may come from a controller that
+                    was never hierarchical. To address this, we propose OHIO
+                    (Offline Hierarchical RL via Inverse Optimization) - a
+                    framework that uses the known structure of the lower-level
+                    optimizer to reconstruct the targets that explain the
+                    logged actions, or the logged transitions where actions are
+                    absent, yielding a dataset for off-the-shelf offline
+                    training. I will show results on network optimization and
+                    robotic problems, including online fine-tuning, and close
+                    on identifiability and on what a per-step feasibility
+                    guarantee does not say about the trajectory.
                   </p>
                 </div>
               </details>
             </div>
           </article>
 
-          <!-- ==================================================
-               4. John Leth
-               ================================================== -->
+          <!-- John Leth -->
 
           <article class="speaker-profile">
             <img
@@ -644,22 +680,32 @@
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
-                    In this talk, I will discuss a series of results on Probably Approximately Correct (PAC)-Bayes learning for stochastic dynamical systems, focusing mainly on linear time-invariant (LTI) stochastic systems in state-space form with inputs. The results extend PAC-Bayes analyses beyond static models and independent data to dynamical systems learned from non-i.i.d. time series. I will present generalization bounds whose dependence on the system’s memory is captured through mixing coefficients and which converge to zero as the amount of data increases. I will also consider partially observed LTI systems and show how PAC-Bayes bounds can provide finite-sample guarantees for both prediction and parameter estimation. These results offer a step toward PAC-Bayes learning guarantees for recurrent neural networks.
+                    In this talk, I will discuss a series of results on
+                    Probably Approximately Correct (PAC)-Bayes learning for
+                    stochastic dynamical systems, focusing mainly on linear
+                    time-invariant (LTI) stochastic systems in state-space form
+                    with inputs. The results extend PAC-Bayes analyses beyond
+                    static models and independent data to dynamical systems
+                    learned from non-i.i.d. time series. I will present
+                    generalization bounds whose dependence on the system’s
+                    memory is captured through mixing coefficients and which
+                    converge to zero as the amount of data increases. I will
+                    also consider partially observed LTI systems and show how
+                    PAC-Bayes bounds can provide finite-sample guarantees for
+                    both prediction and parameter estimation. These results
+                    offer a step toward PAC-Bayes learning guarantees for
+                    recurrent neural networks.
                   </p>
                 </div>
               </details>
             </div>
           </article>
 
-          <!-- ==================================================
-               5. Leif Döring
-               ================================================== -->
+          <!-- Leif Döring -->
 
           <article class="speaker-profile">
             <img
@@ -690,27 +736,26 @@
 
               <p class="speaker-talk-title">
                 <strong>
-                  Some mathematical insights into key practical RL algorithms
+                  Some Mathematical Insights into Key Practical RL Algorithms
                 </strong>
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
-                    In this talk we discuss the standard RL algorithms DQN and PPO. We discuss new ways of interpreting the algorithms that allow us to derive convergence results in the tabular setting but also help to better understand those algorithms.
+                    In this talk we discuss the standard RL algorithms DQN and
+                    PPO. We discuss new ways of interpreting the algorithms
+                    that allow us to derive convergence results in the tabular
+                    setting but also help to better understand those algorithms.
                   </p>
                 </div>
               </details>
             </div>
           </article>
 
-          <!-- ==================================================
-               6. Yevgeny Seldin
-               ================================================== -->
+          <!-- Yevgeny Seldin -->
 
           <article class="speaker-profile">
             <img
@@ -747,13 +792,27 @@
               </p>
 
               <details class="speaker-abstract-details">
-                <summary>
-                  Abstract
-                </summary>
+                <summary>Abstract</summary>
 
                 <div class="speaker-abstract">
                   <p>
-                    Most algorithms in online learning either assume that the environment is stationary or that it is adversarial. The latter guarantees ultimate robustness, whereas the former exploits the simplicity to achieve faster convergence to the optimal policy. But what if it is unknown whether the environment is stationary or adversarial? Or what if it only somewhat deviates from stationarity? I will present best-of-both-worlds online learning algorithms, which guarantee robustness against adversarial environments while simultaneously achieving faster convergence to optimality when environments happen to be stationary, with no need of prior knowledge about the nature of the environment. They also provide graceful interpolation guarantees for a range of intermediate environments. I will also present some open questions concerning trade-offs between restricting modeling complexity of an environment and making assumptions on its stationarity.
+                    Most algorithms in online learning either assume that the
+                    environment is stationary or that it is adversarial. The
+                    latter guarantees ultimate robustness, whereas the former
+                    exploits the simplicity to achieve faster convergence to
+                    the optimal policy. But what if it is unknown whether the
+                    environment is stationary or adversarial? Or what if it
+                    only somewhat deviates from stationarity? I will present
+                    best-of-both-worlds online learning algorithms, which
+                    guarantee robustness against adversarial environments while
+                    simultaneously achieving faster convergence to optimality
+                    when environments happen to be stationary, with no need of
+                    prior knowledge about the nature of the environment. They
+                    also provide graceful interpolation guarantees for a range
+                    of intermediate environments. I will also present some open
+                    questions concerning trade-offs between restricting
+                    modeling complexity of an environment and making
+                    assumptions on its stationarity.
                   </p>
                 </div>
               </details>
@@ -765,11 +824,22 @@
     </main>
 
     <footer class="footer">
-      <img
-        class="footer-logo"
-        src="https://media.licdn.com/dms/image/sync/v2/D4E27AQHSEIKapRSCYQ/articleshare-shrink_800/B4EZ2wB6bpIcAI-/0/1776774785412?e=2147483647&amp;v=beta&amp;t=bI_dzwOwftKAzQKsK8xwk6hrCPCp78a0L--nVTw03iE"
-        alt="Pioneer Centre for Artificial Intelligence"
+      <div
+        class="loco2026-footer-logos"
+        aria-label="LOCO 2026 supporters"
       >
+        <img
+          class="footer-logo"
+          src="https://media.licdn.com/dms/image/sync/v2/D4E27AQHSEIKapRSCYQ/articleshare-shrink_800/B4EZ2wB6bpIcAI-/0/1776774785412?e=2147483647&amp;v=beta&amp;t=bI_dzwOwftKAzQKsK8xwk6hrCPCp78a0L--nVTw03iE"
+          alt="Pioneer Centre for Artificial Intelligence"
+        >
+
+        <img
+          class="footer-logo footer-logo-ddsa"
+          src="../assets/DDSA-logo.png"
+          alt="Danish Data Science Academy"
+        >
+      </div>
 
       <p>
         Learning and Optimal Control in Dynamical Systems. P1 program.
