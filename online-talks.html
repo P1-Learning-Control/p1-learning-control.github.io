@@ -3,8 +3,233 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Learning and Optimal Control in Dynamical Systems</title>
+
+    <title>Events | Learning and Optimal Control in Dynamical Systems</title>
+
     <link rel="stylesheet" href="assets/styles.css">
+
+    <style>
+      /* ==========================================================
+         EVENTS PAGE
+         ========================================================== */
+
+      .events-intro {
+        max-width: 800px;
+      }
+
+      .events-intro p {
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .event-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+        margin-top: 1.5rem;
+      }
+
+      .event-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 48px;
+        padding: 0.72rem 1.25rem;
+
+        color: #ffffff;
+        background: var(--control-blue);
+
+        border: 1px solid var(--control-blue);
+        border-radius: 999px;
+
+        font-weight: 750;
+        line-height: 1.2;
+
+        box-shadow: 0 8px 20px rgba(29, 78, 216, 0.16);
+
+        transition:
+          transform 160ms ease,
+          background-color 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      .event-button:hover {
+        color: #ffffff;
+        background: var(--control-blue-dark);
+        border-color: var(--control-blue-dark);
+        text-decoration: none;
+
+        transform: translateY(-2px);
+
+        box-shadow: 0 12px 26px rgba(29, 78, 216, 0.22);
+      }
+
+      .event-button:focus-visible {
+        outline: 3px solid var(--target-amber);
+        outline-offset: 3px;
+      }
+
+      /* ==========================================================
+         OTHER CALENDAR APPLICATIONS
+         ========================================================== */
+
+      .calendar-subscribe-help {
+        max-width: 800px;
+        margin-top: 1.4rem;
+
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+
+        background: var(--surface-soft);
+        overflow: hidden;
+      }
+
+      .calendar-subscribe-help summary {
+        padding: 1rem 1.2rem;
+
+        color: var(--ink);
+        font-weight: 700;
+
+        cursor: pointer;
+      }
+
+      .calendar-subscribe-help summary:hover {
+        color: var(--control-blue);
+      }
+
+      .calendar-subscribe-help-content {
+        padding: 0 1.2rem 1.2rem;
+      }
+
+      .calendar-subscribe-help-content p {
+        margin: 0 0 1rem;
+        font-size: 0.98rem;
+      }
+
+      .calendar-subscribe-help-content ol {
+        margin: 0.4rem 0 1.2rem;
+        padding-left: 1.4rem;
+      }
+
+      .calendar-subscribe-help-content li {
+        margin-bottom: 0.45rem;
+      }
+
+      .calendar-address-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+
+        margin: 0.8rem 0 1.4rem;
+      }
+
+      .calendar-address {
+        flex: 1;
+        min-width: 0;
+
+        padding: 0.75rem 0.85rem;
+
+        color: var(--ink);
+        background: #ffffff;
+
+        border: 1px solid var(--line);
+        border-radius: 10px;
+
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          "Liberation Mono",
+          monospace;
+
+        font-size: 0.78rem;
+
+        overflow-wrap: anywhere;
+      }
+
+      .copy-calendar-button {
+        flex: 0 0 auto;
+
+        min-height: 42px;
+        padding: 0.6rem 0.9rem;
+
+        color: var(--control-blue);
+        background: #ffffff;
+
+        border: 1px solid var(--control-blue);
+        border-radius: 999px;
+
+        font: inherit;
+        font-weight: 700;
+
+        cursor: pointer;
+      }
+
+      .copy-calendar-button:hover {
+        color: #ffffff;
+        background: var(--control-blue);
+      }
+
+      /* ==========================================================
+         GOOGLE CALENDAR
+         ========================================================== */
+
+      .calendar-intro {
+        max-width: 780px;
+        margin-bottom: 1.4rem;
+        color: var(--muted);
+      }
+
+      .calendar-embed {
+        width: 100%;
+        overflow: hidden;
+
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-medium);
+
+        box-shadow: var(--shadow-card);
+      }
+
+      .calendar-embed iframe {
+        display: block;
+
+        width: 100%;
+        max-width: 100%;
+        height: 600px;
+
+        border: 0;
+      }
+
+      @media (max-width: 700px) {
+        .calendar-embed iframe {
+          height: 520px;
+        }
+
+        .calendar-address-wrap {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .copy-calendar-button {
+          align-self: flex-start;
+        }
+      }
+
+      @media (max-width: 500px) {
+        .calendar-embed iframe {
+          height: 480px;
+        }
+
+        .event-button {
+          width: 100%;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -17,7 +242,7 @@
         <div class="menu" aria-label="Primary navigation">
           <a href="LOCO2026/">LOCO 2026</a>
           <a href="LOCO2027/">LOCO 2027</a>
-          <a href="online-talks.html">Online Events</a>
+          <a href="online-talks.html" aria-current="page">Events</a>
         </div>
       </nav>
     </header>
@@ -32,355 +257,139 @@
 
         <div class="hero-content">
           <p class="eyebrow">
-            <a href="https://www.aicentre.dk/the-centre-p1">P1 Program</a>
+            <a href="https://www.aicentre.dk/the-centre-p1">
+              P1 Program
+            </a>
           </p>
-          <h1>Learning and Optimal Control in Dynamical Systems</h1>
+
+          <h1>Events</h1>
         </div>
       </section>
 
-      <section class="section two-column" aria-labelledby="program-description">
-        <div>
-          <h2 id="program-description">Program Description</h2>
+      <section
+        class="section"
+        aria-labelledby="events-heading"
+      >
+        <div class="events-intro">
+          <h2 id="events-heading">
+            Learning &amp; Optimal Control Events
+          </h2>
 
           <p>
-            Learning to act optimally in dynamical environments, where decisions
-            shape future observations and uncertainty, is central to safe,
-            data-efficient autonomous systems. From stabilizing and decarbonizing
-            energy grids, to adaptive treatment in chronic care, to robotics and
-            space exploration, society increasingly relies on dynamic
-            decision-making systems that must trade off information acquisition
-            and performance under safety, resource, and data constraints.
+            Follow upcoming seminars, workshops, and other events organized by
+            the Learning and Optimal Control in Dynamical Systems program.
           </p>
 
           <p>
-            Concurrently, core ideas and tools for these challenges are advancing
-            across several vibrant communities, including control and systems
-            theory, statistical learning, online optimization and reinforcement
-            learning, and formal models of learning and action. These approaches
-            often adopt different assumptions, objectives, and techniques.
+            Subscribe to the event calendar so that upcoming events and updates
+            appear directly in your calendar.
           </p>
 
-          <p>
-            The P1 program, Learning and Optimal Control in Dynamical Systems,
-            aims to build a sustained community to create a common language,
-            surface shared problem structure, and enable systematic exchange of
-            methods, open problems, and application-driven challenges.
-            Additionally, the program seeks to catalyze theoretical insights and
-            algorithmic advances, accelerating progress toward principled and
-            scalable approaches for learning and optimal control in dynamical
-            systems.
-          </p>
-
-          <p>
-            Beyond knowledge exchange, the ambition is to foster enduring
-            collaborations across Denmark and the Nordics, seed joint research
-            agendas, support cross-institutional teams, and enable coordinated
-            efforts, including collaborative grant proposals and invited/special
-            sessions at major conferences.
-          </p>
-        </div>
-
-        <aside aria-labelledby="program-facts">
-          <h2 id="program-facts">Planned Program</h2>
-
-          <ul class="plain-list">
-            <li>
-              <strong>LOCO 2026:</strong> 10th of September, 2026
-            </li>
-            <li>
-              <strong>LOCO 2027:</strong> Date to be announced
-            </li>
-            <li>
-              <strong>Next Online Events:</strong> Dates to be announced
-            </li>
-          </ul>
-        </aside>
-      </section>
-
-      <section class="section" aria-labelledby="directors">
-        <h2 id="directors">Program Directors</h2>
-
-        <div class="director-grid">
-          <article class="director">
-            <img src="assets/people/Mohamad.jpg" alt="Mohamad Al Ahdab">
-            <h3>
-              <a href="https://mohammadzahd93.github.io/">
-                Mohamad Al Ahdab
-              </a>
-            </h3>
-            <p>
-              Postdoctoral Researcher, Department of Electronic Systems,
-              Aalborg University
-            </p>
-          </article>
-
-          <article class="director">
-            <img
-              src="assets/people/Sadegh.png"
-              alt="Mohammad Sadegh Talebi"
+          <div class="event-actions">
+            <a
+              class="event-button"
+              href="https://calendar.google.com/calendar/u/0?cid=MGE2ZTI1MDQ3MjYyY2Q4ZWRiMDZjMDg0Y2FhYWFjMzRhNTIwMjRiMjk3ZGU4NmY1NDZjMjljZTNhZWFhYWE3N0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t"
+              target="_blank"
+              rel="noopener"
             >
-            <h3>
-              <a href="https://sites.google.com/view/talebi/">
-                Mohammad Sadegh Talebi
-              </a>
-            </h3>
-            <p>
-              Assistant Professor, Department of Computer Science,
-              University of Copenhagen
-            </p>
-          </article>
+              Add to Google Calendar
+            </a>
+          </div>
 
-          <article class="director">
-            <img
-              src="assets/people/Mustafa.jpg"
-              alt="Mustafa Mert Çelikok"
-            >
-            <h3>
-              <a href="https://mmcelikok.github.io/">
-                Mustafa Mert Çelikok
-              </a>
-            </h3>
-            <p>
-              Assistant Professor, Department of Mathematics and Computer
-              Science, University of Southern Denmark
-            </p>
-          </article>
+          <details class="calendar-subscribe-help">
+            <summary>
+              Using Outlook, Apple Calendar, or another calendar?
+            </summary>
+
+            <div class="calendar-subscribe-help-content">
+              <p>
+                You can subscribe to the event calendar using the public
+                calendar address below. A subscription will allow your calendar
+                application to receive future event updates.
+              </p>
+
+              <div class="calendar-address-wrap">
+                <div
+                  class="calendar-address"
+                  id="calendar-address"
+                >
+                  https://calendar.google.com/calendar/ical/0a6e25047262cd8edb06c084caaaac34a52024b297de86f546c29ce3aeaaaa77%40group.calendar.google.com/public/basic.ics
+                </div>
+
+                <button
+                  class="copy-calendar-button"
+                  type="button"
+                  id="copy-calendar-button"
+                >
+                  Copy address
+                </button>
+              </div>
+
+              <p>
+                <strong>Outlook</strong>
+              </p>
+
+              <ol>
+                <li>Open Outlook Calendar.</li>
+                <li>Select <strong>Add calendar</strong>.</li>
+                <li>Select <strong>Subscribe from web</strong>.</li>
+                <li>Paste the calendar address above.</li>
+                <li>Select <strong>Import</strong> or <strong>Add</strong>.</li>
+              </ol>
+
+              <p>
+                <strong>Apple Calendar</strong>
+              </p>
+
+              <ol>
+                <li>Open the Calendar app.</li>
+                <li>
+                  Select
+                  <strong>File → New Calendar Subscription</strong>.
+                </li>
+                <li>Paste the calendar address above.</li>
+                <li>Select <strong>Subscribe</strong>.</li>
+              </ol>
+
+              <p>
+                <strong>Other calendar applications</strong>
+              </p>
+
+              <p>
+                Look for an option such as
+                <em>Subscribe to calendar</em>,
+                <em>Add calendar from URL</em>, or
+                <em>Subscribe from web</em>, and paste the address above.
+              </p>
+            </div>
+          </details>
         </div>
       </section>
 
-      <section class="section" aria-labelledby="members">
-        <h2 id="members">Program Members</h2>
+      <section
+        class="section"
+        aria-labelledby="calendar-heading"
+      >
+        <h2 id="calendar-heading">
+          Event Calendar
+        </h2>
 
-        <div class="member-grid" data-randomize-members>
-          <article class="member">
-            <img src="assets/people/Mohamad.jpg" alt="Mohamad Al Ahdab">
-            <div>
-              <h3>
-                <a href="https://mohammadzahd93.github.io/">
-                  Mohamad Al Ahdab
-                </a>
-              </h3>
-              <p>Postdoc, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
+        <p class="calendar-intro">
+          Browse upcoming Learning &amp; Optimal Control events below.
+          Event times are shown using the Europe/Copenhagen time zone.
+        </p>
 
-          <article class="member">
-            <img
-              src="assets/people/Aitor.png"
-              alt="Aitor Ramirez Gomez"
-            >
-            <div>
-              <h3>
-                <a href="https://aytor.github.io/">
-                  Aitor Ramirez Gomez
-                </a>
-              </h3>
-              <p>Postdoctoral Researcher, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/John-Leth.jpg" alt="John Leth">
-            <div>
-              <h3>
-                <a href="https://vbn.aau.dk/da/persons/jjl/">
-                  John Leth
-                </a>
-              </h3>
-              <p>Associate Professor, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Zheng-hua.jpg" alt="Zheng-Hua Tan">
-            <div>
-              <h3>
-                <a href="https://zhenghuatan.es.aau.dk/">
-                  Zheng-Hua Tan
-                </a>
-              </h3>
-              <p>Professor, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Szymon.png" alt="Szymon Gres">
-            <div>
-              <h3>
-                <a href="https://www.esgres.com/">Szymon Gres</a>
-              </h3>
-              <p>Postdoc, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Mirhan.jpg" alt="Mirhan Ürkmez">
-            <div>
-              <h3>
-                <a href="https://vbn.aau.dk/en/persons/mu/">
-                  Mirhan Ürkmez
-                </a>
-              </h3>
-              <p>Postdoc, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img
-              src="assets/people/Abhijit.webp"
-              alt="Abhijit Mazumdar"
-            >
-            <div>
-              <h3>
-                <a href="https://orcid.org/0000-0001-8920-4680">
-                  Abhijit Mazumdar
-                </a>
-              </h3>
-              <p>Postdoc, Department of Electronic Systems</p>
-              <p>Aalborg University</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Jens.jpg" alt="Jens E. Pedersen">
-            <div>
-              <h3>
-                <a href="https://jepedersen.dk/">
-                  Jens E. Pedersen
-                </a>
-              </h3>
-              <p>
-                Postdoc, Department of Electrical and Photonics Engineering
-              </p>
-              <p>Technical University of Denmark</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Silvia.jpg" alt="Silvia Tolu">
-            <div>
-              <h3>
-                <a href="https://orbit.dtu.dk/en/persons/silvia-tolu/">
-                  Silvia Tolu
-                </a>
-              </h3>
-              <p>
-                Associate Professor, Department of Electrical and Photonics
-                Engineering
-              </p>
-              <p>Technical University of Denmark</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img
-              src="assets/people/Nina.jpg"
-              alt="Nina Gierasimczuk"
-            >
-            <div>
-              <h3>
-                <a href="http://www.ninagierasimczuk.com/">
-                  Nina Gierasimczuk
-                </a>
-              </h3>
-              <p>
-                Associate Professor, Department of Applied Mathematics and
-                Computer Science
-              </p>
-              <p>Technical University of Denmark</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img
-              src="assets/people/Sadegh.png"
-              alt="Mohammad Sadegh Talebi"
-            >
-            <div>
-              <h3>
-                <a href="https://sites.google.com/view/talebi/">
-                  Mohammad Sadegh Talebi
-                </a>
-              </h3>
-              <p>
-                Tenure-track Assistant Professor, Department of Computer
-                Science
-              </p>
-              <p>University of Copenhagen</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/yevgeny.png" alt="Yevgeny Seldin">
-            <div>
-              <h3>
-                <a href="https://sites.google.com/site/yevgenyseldin">
-                  Yevgeny Seldin
-                </a>
-              </h3>
-              <p>Professor, Department of Computer Science</p>
-              <p>University of Copenhagen</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img src="assets/people/Melih.jpg" alt="Melih Kandemir">
-            <div>
-              <h3>
-                <a href="https://melihkandemir.github.io/">
-                  Melih Kandemir
-                </a>
-              </h3>
-              <p>
-                Associate Professor, Department of Mathematics and Computer
-                Science
-              </p>
-              <p>University of Southern Denmark</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img
-              src="assets/people/Mustafa.jpg"
-              alt="Mustafa Mert Çelikok"
-            >
-            <div>
-              <h3>
-                <a href="https://mmcelikok.github.io/">
-                  Mustafa Mert Çelikok
-                </a>
-              </h3>
-              <p>
-                Tenure-track Assistant Professor, Department of Mathematics
-                and Computer Science
-              </p>
-              <p>University of Southern Denmark</p>
-            </div>
-          </article>
-
-          <article class="member">
-            <img
-              src="assets/people/Abdel Hakim.jpg"
-              alt="Abdel Hakim Khaled Saad Amin Amer"
-            >
-            <div>
-              <h3>
-                <a href="https://www.au.dk/en/abdelhakim@ece.au.dk">
-                  Abdel Hakim Khaled Saad Amin Amer
-                </a>
-              </h3>
-              <p>
-                Postdoc, Department of Electrical and Computer Engineering
-              </p>
-              <p>Aarhus University</p>
-            </div>
-          </article>
+        <div class="calendar-embed">
+          <iframe
+            src="https://calendar.google.com/calendar/embed?src=0a6e25047262cd8edb06c084caaaac34a52024b297de86f546c29ce3aeaaaa77%40group.calendar.google.com&amp;ctz=Europe%2FCopenhagen"
+            style="border: 0"
+            width="800"
+            height="600"
+            frameborder="0"
+            scrolling="no"
+            title="Learning and Optimal Control Events Calendar"
+            loading="lazy"
+          ></iframe>
         </div>
       </section>
     </main>
@@ -391,9 +400,42 @@
         src="https://media.licdn.com/dms/image/sync/v2/D4E27AQHSEIKapRSCYQ/articleshare-shrink_800/B4EZ2wB6bpIcAI-/0/1776774785412?e=2147483647&amp;v=beta&amp;t=bI_dzwOwftKAzQKsK8xwk6hrCPCp78a0L--nVTw03iE"
         alt="Pioneer Centre for Artificial Intelligence"
       >
-      <p>Learning and Optimal Control in Dynamical Systems. P1 program.</p>
+
+      <p>
+        Learning and Optimal Control in Dynamical Systems. P1 program.
+      </p>
     </footer>
 
     <script src="assets/pendulum.js"></script>
+
+    <script>
+      const copyCalendarButton = document.getElementById(
+        "copy-calendar-button"
+      );
+
+      const calendarAddress = document.getElementById(
+        "calendar-address"
+      );
+
+      copyCalendarButton.addEventListener("click", async () => {
+        const address = calendarAddress.textContent.trim();
+
+        try {
+          await navigator.clipboard.writeText(address);
+
+          const originalText = copyCalendarButton.textContent;
+          copyCalendarButton.textContent = "Copied!";
+
+          window.setTimeout(() => {
+            copyCalendarButton.textContent = originalText;
+          }, 1800);
+        } catch (error) {
+          window.prompt(
+            "Copy this calendar address:",
+            address
+          );
+        }
+      });
+    </script>
   </body>
 </html>
